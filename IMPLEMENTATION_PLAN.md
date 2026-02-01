@@ -9,10 +9,10 @@
 |------|--------|----------|
 | 001 - Project Setup | COMPLETE | 100% |
 | 002 - Database Schema | COMPLETE | 100% |
-| 003 - Productos CRUD | NOT STARTED | 0% |
+| 003 - Productos CRUD | COMPLETE | 100% |
 | 004 - POS Basico | NOT STARTED | 0% |
 
-**Current State**: Entidades y repositorios implementados, sin APIs REST, sin UI funcional.
+**Current State**: API REST y UI para productos/categorias funcionales.
 
 ---
 
@@ -29,32 +29,32 @@
 - [x] [HIGH] Configure JPA auditing for @CreatedDate/@LastModifiedDate - from spec 002
 - [x] [MEDIUM] Write integration tests for repositories - from spec 002
 
-### Spec 003 - Productos CRUD Backend
+### Spec 003 - Productos CRUD Backend (COMPLETE)
 
-- [ ] [HIGH] Create `CategoriaDTO.java` and `CategoriaCreateDTO.java` - from spec 003
-- [ ] [HIGH] Create `ProductoDTO.java`, `ProductoCreateDTO.java` - from spec 003
-- [ ] [HIGH] Create `CategoriaService.java` with CRUD operations - from spec 003
-- [ ] [HIGH] Create `ProductoService.java` with CRUD + search operations - from spec 003
-- [ ] [HIGH] Create `CategoriaController.java` (GET, POST, PUT, DELETE) - from spec 003
-- [ ] [HIGH] Create `ProductoController.java` (all endpoints including search, barcode, favoritos, stock-bajo) - from spec 003
-- [ ] [MEDIUM] Add validation annotations to DTOs - from spec 003
-- [ ] [MEDIUM] Add global exception handler for API errors - from spec 003
+- [x] [HIGH] Create `CategoriaDTO.java` and `CategoriaCreateDTO.java` - from spec 003
+- [x] [HIGH] Create `ProductoDTO.java`, `ProductoCreateDTO.java` - from spec 003
+- [x] [HIGH] Create `CategoriaService.java` with CRUD operations - from spec 003
+- [x] [HIGH] Create `ProductoService.java` with CRUD + search operations - from spec 003
+- [x] [HIGH] Create `CategoriaController.java` (GET, POST, PUT, DELETE) - from spec 003
+- [x] [HIGH] Create `ProductoController.java` (all endpoints including search, barcode, favoritos, stock-bajo) - from spec 003
+- [x] [MEDIUM] Add validation annotations to DTOs - from spec 003
+- [x] [MEDIUM] Add global exception handler for API errors - from spec 003
 
-### Spec 003 - Productos CRUD Frontend
+### Spec 003 - Productos CRUD Frontend (COMPLETE)
 
-- [ ] [HIGH] Initialize shadcn/ui components (Table, Input, Button, Select, Dialog, Form, Toast) - from spec 003
-- [ ] [HIGH] Install and configure react-hook-form + zod - from spec 003
-- [ ] [HIGH] Install and configure Zustand for state management - from spec 003
-- [ ] [HIGH] Create API client utility in `/lib/api.ts` - from spec 003
-- [ ] [HIGH] Create TypeScript types for Producto, Categoria - from spec 003
-- [ ] [HIGH] Create `/productos` page with product table - from spec 003
-- [ ] [HIGH] Create product search with debounce - from spec 003
-- [ ] [HIGH] Create category filter for products - from spec 003
-- [ ] [HIGH] Create `/productos/nuevo` page with form - from spec 003
-- [ ] [HIGH] Create `/productos/[id]/editar` page - from spec 003
-- [ ] [HIGH] Create `/categorias` page with CRUD - from spec 003
-- [ ] [MEDIUM] Add color picker for categories - from spec 003
-- [ ] [MEDIUM] Add margin preview in product form - from spec 003
+- [x] [HIGH] Initialize shadcn/ui components (Table, Input, Button, Select, Dialog, Form, Toast) - from spec 003
+- [x] [HIGH] Install and configure react-hook-form + zod - from spec 003
+- [x] [HIGH] Install and configure Zustand for state management - from spec 003
+- [x] [HIGH] Create API client utility in `/lib/api.ts` - from spec 003
+- [x] [HIGH] Create TypeScript types for Producto, Categoria - from spec 003
+- [x] [HIGH] Create `/productos` page with product table - from spec 003
+- [x] [HIGH] Create product search with debounce - from spec 003
+- [x] [HIGH] Create category filter for products - from spec 003
+- [x] [HIGH] Create `/productos/nuevo` page with form - from spec 003
+- [x] [HIGH] Create `/productos/[id]/editar` page - from spec 003
+- [x] [HIGH] Create `/categorias` page with CRUD - from spec 003
+- [x] [MEDIUM] Add color picker for categories - from spec 003
+- [x] [MEDIUM] Add margin preview in product form - from spec 003
 
 ### Spec 004 - POS Backend
 
@@ -85,9 +85,9 @@
 
 ### Quality & Polish
 
-- [ ] [MEDIUM] Ensure all `./gradlew test` pass - from all specs
-- [ ] [MEDIUM] Ensure `pnpm lint` passes - from all specs
-- [ ] [MEDIUM] Ensure `pnpm typecheck` passes - from all specs
+- [x] [MEDIUM] Ensure all `./gradlew test` pass - from all specs
+- [x] [MEDIUM] Ensure `pnpm lint` passes - from all specs
+- [x] [MEDIUM] Ensure `pnpm typecheck` passes - from all specs
 - [ ] [LOW] Add responsive design for tablet/mobile - from constitution
 
 ---
@@ -107,15 +107,15 @@
 
 ## Implementation Order
 
-1. **Fase 1: Base de datos** (Spec 002)
+1. **Fase 1: Base de datos** (Spec 002) - COMPLETE
    - Sin esto no se puede hacer nada mas
    - Flyway + Entidades + Repositorios
 
-2. **Fase 2: CRUD Backend** (Spec 003 - parte backend)
+2. **Fase 2: CRUD Backend** (Spec 003 - parte backend) - COMPLETE
    - Services + Controllers + DTOs
    - Todos los endpoints de categorias y productos
 
-3. **Fase 3: CRUD Frontend** (Spec 003 - parte frontend)
+3. **Fase 3: CRUD Frontend** (Spec 003 - parte frontend) - COMPLETE
    - shadcn/ui + hooks + pages
    - /productos y /categorias funcionales
 
@@ -137,3 +137,4 @@
 ---
 
 **Generated**: 2026-02-01
+**Last Updated**: 2026-02-01

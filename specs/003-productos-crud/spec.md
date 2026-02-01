@@ -4,7 +4,7 @@
 
 ## Priority: 3
 
-## Status: INCOMPLETE
+## Status: COMPLETE
 
 ---
 
@@ -84,15 +84,15 @@ ProductoDTO {
 
 ## Acceptance Criteria
 
-- [ ] Todos los endpoints responden correctamente
-- [ ] Se puede crear/editar/eliminar productos desde la UI
-- [ ] Se puede crear/editar/eliminar categorias desde la UI
-- [ ] Busqueda de productos funciona
-- [ ] Filtro por categoria funciona
-- [ ] Marcar favorito funciona
-- [ ] Lista de stock bajo funciona
-- [ ] `./gradlew test` pasa
-- [ ] `pnpm lint && pnpm typecheck` pasa
+- [x] Todos los endpoints responden correctamente
+- [x] Se puede crear/editar/eliminar productos desde la UI
+- [x] Se puede crear/editar/eliminar categorias desde la UI
+- [x] Busqueda de productos funciona
+- [x] Filtro por categoria funciona
+- [x] Marcar favorito funciona
+- [x] Lista de stock bajo funciona
+- [x] `./gradlew test` pasa
+- [x] `pnpm lint && pnpm typecheck` pasa
 
 ---
 
