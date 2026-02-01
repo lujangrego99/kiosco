@@ -10,6 +10,7 @@ import ar.com.kiosco.repository.ProductoRepository;
 import ar.com.kiosco.repository.VentaRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +53,7 @@ public class VentaService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public VentaDTO crear(VentaCreateDTO dto) {
         // Validate medio de pago
         Venta.MedioPago medioPago;
@@ -125,6 +127,7 @@ public class VentaService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = "productos", allEntries = true)
     public VentaDTO anular(UUID id) {
         Venta venta = ventaRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Venta no encontrada: " + id));

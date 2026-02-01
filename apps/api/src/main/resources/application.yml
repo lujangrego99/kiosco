@@ -22,6 +22,22 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  # Redis Configuration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000  # 1 hora default
+
+  session:
+    store-type: redis
+    redis:
+      namespace: kiosco:sessions
+
 # JWT Configuration
 jwt:
   secret: ${JWT_SECRET:kiosco-development-secret-key-change-in-production}

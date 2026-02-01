@@ -13,6 +13,14 @@ spring:
   flyway:
     enabled: false
 
+  # Disable Redis for tests
+  cache:
+    type: none
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.session.SessionAutoConfiguration
+
 jwt:
   secret: test-secret-key-for-testing-purposes-only
   expiration: 86400000

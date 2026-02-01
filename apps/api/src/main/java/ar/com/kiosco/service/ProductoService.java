@@ -6,8 +6,12 @@ import ar.com.kiosco.dto.ProductoCreateDTO;
 import ar.com.kiosco.dto.ProductoDTO;
 import ar.com.kiosco.repository.CategoriaRepository;
 import ar.com.kiosco.repository.ProductoRepository;
+import ar.com.kiosco.security.KioscoContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +22,23 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@CacheConfig(cacheNames = "productos")
 public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
 
+    /**
+     * Get current kiosco ID for cache key prefix.
+     * Returns "global" if no tenant context.
+     */
+    private String getTenantKey() {
+        UUID kioscoId = KioscoContext.getCurrentKioscoId();
+        return kioscoId != null ? kioscoId.toString().substring(0, 8) : "global";
+    }
+
     @Transactional(readOnly = true)
+    @Cacheable(key = "T(ar.com.kiosco.security.KioscoContext).getCurrentKioscoId()?.toString()?.substring(0,8) ?: 'global' + ':all'")
     public List<ProductoDTO> listarActivos() {
         return productoRepository.findByActivoTrue()
                 .stream()
@@ -32,6 +47,7 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(key = "T(ar.com.kiosco.security.KioscoContext).getCurrentKioscoId()?.toString()?.substring(0,8) ?: 'global' + ':' + #id")
     public ProductoDTO obtenerPorId(UUID id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
@@ -40,6 +56,7 @@ public class ProductoService {
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> buscar(String query) {
+        // No cache for search - queries vary too much
         return productoRepository.findByNombreContainingIgnoreCase(query)
                 .stream()
                 .filter(Producto::getActivo)
@@ -48,6 +65,7 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(key = "T(ar.com.kiosco.security.KioscoContext).getCurrentKioscoId()?.toString()?.substring(0,8) ?: 'global' + ':barcode:' + #codigoBarras")
     public ProductoDTO buscarPorCodigoBarras(String codigoBarras) {
         Producto producto = productoRepository.findByCodigoBarras(codigoBarras)
                 .filter(Producto::getActivo)
@@ -56,6 +74,7 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(key = "T(ar.com.kiosco.security.KioscoContext).getCurrentKioscoId()?.toString()?.substring(0,8) ?: 'global' + ':favoritos'")
     public List<ProductoDTO> listarFavoritos() {
         return productoRepository.findByEsFavoritoTrue()
                 .stream()
@@ -66,6 +85,7 @@ public class ProductoService {
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarStockBajo() {
+        // No cache - stock changes frequently with sales
         return productoRepository.findByStockBajo()
                 .stream()
                 .map(ProductoDTO::fromEntity)
@@ -73,6 +93,7 @@ public class ProductoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(key = "T(ar.com.kiosco.security.KioscoContext).getCurrentKioscoId()?.toString()?.substring(0,8) ?: 'global' + ':categoria:' + #categoriaId")
     public List<ProductoDTO> listarPorCategoria(UUID categoriaId) {
         return productoRepository.findByCategoriaId(categoriaId)
                 .stream()
@@ -82,6 +103,7 @@ public class ProductoService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public ProductoDTO crear(ProductoCreateDTO dto) {
         Categoria categoria = null;
         if (dto.getCategoriaId() != null) {
@@ -108,6 +130,7 @@ public class ProductoService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public ProductoDTO actualizar(UUID id, ProductoCreateDTO dto) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
@@ -142,6 +165,7 @@ public class ProductoService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public void eliminar(UUID id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
@@ -151,6 +175,7 @@ public class ProductoService {
     }
 
     @Transactional
+    @CacheEvict(allEntries = true)
     public ProductoDTO marcarFavorito(UUID id, boolean esFavorito) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
@@ -158,5 +183,14 @@ public class ProductoService {
         producto.setEsFavorito(esFavorito);
         producto = productoRepository.save(producto);
         return ProductoDTO.fromEntity(producto);
+    }
+
+    /**
+     * Evict all product caches for current tenant.
+     * Called after sales to ensure stock is refreshed.
+     */
+    @CacheEvict(allEntries = true)
+    public void evictAllCache() {
+        // Cache eviction handled by annotation
     }
 }
