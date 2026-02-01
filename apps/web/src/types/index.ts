@@ -212,3 +212,44 @@ export interface ValidacionCuit {
   cuitFormateado: string;
   mensaje: string;
 }
+
+// Facturacion types
+export type ResultadoAfip = 'APROBADO' | 'RECHAZADO' | 'PARCIAL';
+
+export interface Comprobante {
+  id: string;
+  ventaId?: string;
+  ventaNumero?: number;
+  clienteId?: string;
+  clienteNombre?: string;
+  clienteCuit?: string;
+  tipoComprobante: number;
+  tipoComprobanteDescripcion: string;
+  tipoComprobanteLetra: string;
+  puntoVenta: number;
+  numero: number;
+  numeroCompleto: string;
+  cuitEmisor: string;
+  razonSocialEmisor: string;
+  condicionIvaEmisor: string;
+  cuitReceptor?: string;
+  condicionIvaReceptor?: string;
+  importeNeto?: number;
+  importeIva?: number;
+  importeTotal: number;
+  cae?: string;
+  caeVencimiento?: string;
+  caeVigente: boolean;
+  resultado?: ResultadoAfip;
+  aprobado: boolean;
+  observaciones?: string;
+  fechaEmision: string;
+  createdAt: string;
+}
+
+export interface EmitirFactura {
+  ventaId: string;
+  clienteId?: string;
+  cuitReceptor?: string;
+  condicionIvaReceptor?: string;
+}

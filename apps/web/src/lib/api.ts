@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, ConfigFiscal, ConfigFiscalCreate, CuentaCorriente, Movimiento, Pago, Producto, ProductoCreate, ValidacionCuit, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, CuentaCorriente, EmitirFactura, Movimiento, Pago, Producto, ProductoCreate, ValidacionCuit, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -272,5 +272,63 @@ export const configFiscalApi = {
   validarCuit: async (cuit: string): Promise<ValidacionCuit> => {
     const response = await fetch(`${API_BASE}/config/fiscal/validar-cuit?cuit=${encodeURIComponent(cuit)}`);
     return handleResponse<ValidacionCuit>(response);
+  },
+};
+
+// Facturacion API
+export const facturacionApi = {
+  emitir: async (data: EmitirFactura): Promise<Comprobante> => {
+    const response = await fetch(`${API_BASE}/facturacion/emitir`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Comprobante>(response);
+  },
+
+  obtenerPorVenta: async (ventaId: string): Promise<Comprobante | null> => {
+    const response = await fetch(`${API_BASE}/facturacion/venta/${ventaId}`);
+    if (response.status === 404) {
+      return null;
+    }
+    return handleResponse<Comprobante>(response);
+  },
+
+  obtener: async (id: string): Promise<Comprobante> => {
+    const response = await fetch(`${API_BASE}/facturacion/${id}`);
+    return handleResponse<Comprobante>(response);
+  },
+
+  listar: async (params?: { desde?: string; hasta?: string; tipo?: number }): Promise<Comprobante[]> => {
+    const queryParams = new URLSearchParams();
+    if (params?.desde) queryParams.append('desde', params.desde);
+    if (params?.hasta) queryParams.append('hasta', params.hasta);
+    if (params?.tipo) queryParams.append('tipo', params.tipo.toString());
+
+    const url = queryParams.toString()
+      ? `${API_BASE}/facturacion/comprobantes?${queryParams}`
+      : `${API_BASE}/facturacion/comprobantes`;
+
+    const response = await fetch(url);
+    return handleResponse<Comprobante[]>(response);
+  },
+
+  getUltimoNumero: async (tipoComprobante: number, puntoVenta: number): Promise<{ ultimoNumero: number; proximoNumero: number }> => {
+    const response = await fetch(
+      `${API_BASE}/facturacion/ultimo-numero?tipoComprobante=${tipoComprobante}&puntoVenta=${puntoVenta}`
+    );
+    return handleResponse<{ ultimoNumero: number; proximoNumero: number }>(response);
+  },
+
+  descargarPdf: async (id: string): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/facturacion/${id}/pdf`);
+    if (!response.ok) {
+      throw new Error('Error al descargar PDF');
+    }
+    return response.blob();
+  },
+
+  getPdfUrl: (id: string): string => {
+    return `${API_BASE}/facturacion/${id}/pdf/preview`;
   },
 };
