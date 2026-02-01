@@ -47,6 +47,7 @@ export interface OfflineVenta {
   medioPago: string;
   montoRecibido?: number;
   vuelto?: number;
+  clienteId?: string;
   fecha: number;
   synced: boolean;
   syncError?: string;

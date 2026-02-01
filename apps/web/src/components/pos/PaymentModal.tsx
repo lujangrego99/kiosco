@@ -13,8 +13,10 @@ import { Label } from '@/components/ui/label';
 import { useCartStore } from '@/stores/cart-store';
 import { syncService } from '@/lib/sync';
 import { getNextVentaNumero, setNextVentaNumero } from '@/lib/db';
-import type { MedioPago } from '@/types';
-import { Loader2, Banknote, CreditCard, Building2 } from 'lucide-react';
+import { cuentaCorrienteApi } from '@/lib/api';
+import type { MedioPago, Cliente } from '@/types';
+import { Loader2, Banknote, CreditCard, Building2, Clock, AlertTriangle } from 'lucide-react';
+import { ClienteSelect } from '@/components/clientes';
 
 interface PaymentModalProps {
   open: boolean;
@@ -26,6 +28,7 @@ const mediosPago: { value: MedioPago; label: string; icon: React.ReactNode }[] =
   { value: 'EFECTIVO', label: 'Efectivo', icon: <Banknote className="h-6 w-6" /> },
   { value: 'MERCADOPAGO', label: 'Mercado Pago', icon: <CreditCard className="h-6 w-6" /> },
   { value: 'TRANSFERENCIA', label: 'Transferencia', icon: <Building2 className="h-6 w-6" /> },
+  { value: 'FIADO', label: 'Fiar', icon: <Clock className="h-6 w-6" /> },
 ];
 
 function generateId(): string {
@@ -37,6 +40,10 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
   const [montoRecibido, setMontoRecibido] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedClienteId, setSelectedClienteId] = useState<string | undefined>();
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | undefined>();
+  const [creditoInfo, setCreditoInfo] = useState<{ puede: boolean; disponible: number } | null>(null);
+  const [checkingCredito, setCheckingCredito] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { items, getTotal, clear } = useCartStore();
@@ -51,14 +58,52 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
       setMedioPago('EFECTIVO');
       setMontoRecibido('');
       setError(null);
+      setSelectedClienteId(undefined);
+      setSelectedCliente(undefined);
+      setCreditoInfo(null);
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   }, [open]);
+
+  // Check credit availability when FIADO is selected and client changes
+  useEffect(() => {
+    if (medioPago === 'FIADO' && selectedClienteId) {
+      setCheckingCredito(true);
+      cuentaCorrienteApi.verificarPuedeFiar(selectedClienteId, total)
+        .then((info) => {
+          setCreditoInfo({ puede: info.puede, disponible: info.disponible });
+        })
+        .catch(() => {
+          setCreditoInfo(null);
+        })
+        .finally(() => {
+          setCheckingCredito(false);
+        });
+    } else {
+      setCreditoInfo(null);
+    }
+  }, [medioPago, selectedClienteId, total]);
+
+  const handleClienteChange = (clienteId: string | undefined, cliente?: Cliente) => {
+    setSelectedClienteId(clienteId);
+    setSelectedCliente(cliente);
+  };
 
   const handleSubmit = async () => {
     if (medioPago === 'EFECTIVO' && (!montoRecibido || parseFloat(montoRecibido) < total)) {
       setError('El monto recibido debe ser mayor o igual al total');
       return;
+    }
+
+    if (medioPago === 'FIADO') {
+      if (!selectedClienteId) {
+        setError('Debe seleccionar un cliente para fiar');
+        return;
+      }
+      if (creditoInfo && !creditoInfo.puede) {
+        setError('El cliente no tiene credito disponible');
+        return;
+      }
     }
 
     setLoading(true);
@@ -92,6 +137,7 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
         medioPago,
         montoRecibido: medioPago === 'EFECTIVO' ? parseFloat(montoRecibido) : undefined,
         vuelto: medioPago === 'EFECTIVO' ? vuelto : undefined,
+        clienteId: selectedClienteId,
         fecha: Date.now(),
       });
 
@@ -126,7 +172,7 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
           {/* Payment method selection */}
           <div className="space-y-2">
             <Label>Medio de pago</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               {mediosPago.map((mp) => (
                 <Button
                   key={mp.value}
@@ -141,6 +187,44 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
               ))}
             </div>
           </div>
+
+          {/* Client selection for FIADO */}
+          {medioPago === 'FIADO' && (
+            <div className="space-y-2">
+              <Label>Cliente *</Label>
+              <ClienteSelect
+                value={selectedClienteId}
+                onChange={handleClienteChange}
+                allowCreate={true}
+              />
+              {checkingCredito && (
+                <p className="text-sm text-muted-foreground">Verificando credito...</p>
+              )}
+              {creditoInfo && !creditoInfo.puede && (
+                <div className="flex items-center gap-2 p-2 bg-destructive/10 text-destructive rounded-md text-sm">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Sin credito disponible. Disponible: ${creditoInfo.disponible.toFixed(0)}</span>
+                </div>
+              )}
+              {creditoInfo && creditoInfo.puede && (
+                <p className="text-sm text-green-600">
+                  Credito disponible: ${creditoInfo.disponible.toFixed(0)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Optional client selection for other payment methods */}
+          {medioPago !== 'FIADO' && (
+            <div className="space-y-2">
+              <Label>Cliente (opcional)</Label>
+              <ClienteSelect
+                value={selectedClienteId}
+                onChange={handleClienteChange}
+                allowCreate={true}
+              />
+            </div>
+          )}
 
           {/* Amount received (only for cash) */}
           {medioPago === 'EFECTIVO' && (
@@ -199,7 +283,7 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
           <Button
             className="w-full h-14 text-lg"
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || (medioPago === 'FIADO' && (!selectedClienteId || (creditoInfo !== null && !creditoInfo.puede)))}
           >
             {loading ? (
               <>
@@ -207,7 +291,7 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
                 Procesando...
               </>
             ) : (
-              'Confirmar venta'
+              medioPago === 'FIADO' ? 'Fiar venta' : 'Confirmar venta'
             )}
           </Button>
         </div>

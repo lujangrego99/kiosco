@@ -1,11 +1,13 @@
 package ar.com.kiosco.service;
 
+import ar.com.kiosco.domain.Cliente;
 import ar.com.kiosco.domain.Producto;
 import ar.com.kiosco.domain.Venta;
 import ar.com.kiosco.domain.VentaItem;
 import ar.com.kiosco.dto.VentaCreateDTO;
 import ar.com.kiosco.dto.VentaDTO;
 import ar.com.kiosco.dto.VentaItemCreateDTO;
+import ar.com.kiosco.repository.ClienteRepository;
 import ar.com.kiosco.repository.ProductoRepository;
 import ar.com.kiosco.repository.VentaRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,6 +30,8 @@ public class VentaService {
 
     private final VentaRepository ventaRepository;
     private final ProductoRepository productoRepository;
+    private final ClienteRepository clienteRepository;
+    private final CuentaCorrienteService cuentaCorrienteService;
 
     @Transactional(readOnly = true)
     public VentaDTO obtenerPorId(UUID id) {
@@ -60,13 +64,28 @@ public class VentaService {
         try {
             medioPago = Venta.MedioPago.valueOf(dto.getMedioPago().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Medio de pago inválido: " + dto.getMedioPago());
+            throw new IllegalArgumentException("Medio de pago invalido: " + dto.getMedioPago());
+        }
+
+        // For FIADO, validate client
+        boolean esFiado = medioPago == Venta.MedioPago.FIADO;
+        Cliente cliente = null;
+
+        if (dto.getClienteId() != null) {
+            cliente = clienteRepository.findById(dto.getClienteId())
+                    .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado: " + dto.getClienteId()));
+        }
+
+        if (esFiado && cliente == null) {
+            throw new IllegalArgumentException("Para fiar es necesario seleccionar un cliente");
         }
 
         // Create venta
         Venta venta = Venta.builder()
                 .numero(ventaRepository.getProximoNumero())
                 .fecha(LocalDateTime.now())
+                .cliente(cliente)
+                .esFiado(esFiado)
                 .medioPago(medioPago)
                 .descuento(dto.getDescuento() != null ? dto.getDescuento() : BigDecimal.ZERO)
                 .estado(Venta.EstadoVenta.COMPLETADA)
@@ -116,6 +135,14 @@ public class VentaService {
         BigDecimal total = subtotal.subtract(descuento);
         venta.setTotal(total);
 
+        // Validate credit limit for fiado
+        if (esFiado) {
+            if (!cuentaCorrienteService.puedeTomarFiado(cliente.getId(), total)) {
+                throw new IllegalStateException(
+                        "El cliente no tiene credito disponible para fiar este monto");
+            }
+        }
+
         // Set payment info
         if (medioPago == Venta.MedioPago.EFECTIVO && dto.getMontoRecibido() != null) {
             venta.setMontoRecibido(dto.getMontoRecibido());
@@ -123,6 +150,17 @@ public class VentaService {
         }
 
         venta = ventaRepository.save(venta);
+
+        // Register charge to cuenta corriente for fiado
+        if (esFiado) {
+            cuentaCorrienteService.registrarCargo(
+                    cliente.getId(),
+                    total,
+                    venta.getId(),
+                    "Venta #" + venta.getNumero()
+            );
+        }
+
         return VentaDTO.fromEntity(venta);
     }
 
@@ -133,7 +171,7 @@ public class VentaService {
                 .orElseThrow(() -> new EntityNotFoundException("Venta no encontrada: " + id));
 
         if (venta.getEstado() == Venta.EstadoVenta.ANULADA) {
-            throw new IllegalStateException("La venta ya está anulada");
+            throw new IllegalStateException("La venta ya esta anulada");
         }
 
         // Restore stock
@@ -143,6 +181,15 @@ public class VentaService {
                 producto.setStockActual(producto.getStockActual().add(item.getCantidad()));
                 productoRepository.save(producto);
             }
+        }
+
+        // Reverse charge for fiado sales
+        if (venta.getEsFiado() && venta.getCliente() != null) {
+            cuentaCorrienteService.registrarAjuste(
+                    venta.getCliente().getId(),
+                    venta.getTotal().negate(),
+                    "Anulacion venta #" + venta.getNumero()
+            );
         }
 
         venta.setEstado(Venta.EstadoVenta.ANULADA);

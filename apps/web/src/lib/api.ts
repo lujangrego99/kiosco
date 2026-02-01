@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Producto, ProductoCreate, Venta, VentaCreate } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, CuentaCorriente, Movimiento, Pago, Producto, ProductoCreate, Venta, VentaCreate } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -193,5 +193,37 @@ export const clientesApi = {
       method: 'DELETE',
     });
     return handleResponse<void>(response);
+  },
+};
+
+// Cuenta Corriente API
+export const cuentaCorrienteApi = {
+  obtenerCuenta: async (clienteId: string): Promise<CuentaCorriente> => {
+    const response = await fetch(`${API_BASE}/clientes/${clienteId}/cuenta`);
+    return handleResponse<CuentaCorriente>(response);
+  },
+
+  obtenerMovimientos: async (clienteId: string): Promise<Movimiento[]> => {
+    const response = await fetch(`${API_BASE}/clientes/${clienteId}/movimientos`);
+    return handleResponse<Movimiento[]>(response);
+  },
+
+  registrarPago: async (clienteId: string, pago: Pago): Promise<Movimiento> => {
+    const response = await fetch(`${API_BASE}/clientes/${clienteId}/pago`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pago),
+    });
+    return handleResponse<Movimiento>(response);
+  },
+
+  listarDeudores: async (): Promise<CuentaCorriente[]> => {
+    const response = await fetch(`${API_BASE}/cuenta-corriente/deudores`);
+    return handleResponse<CuentaCorriente[]>(response);
+  },
+
+  verificarPuedeFiar: async (clienteId: string, monto: number): Promise<{ puede: boolean; saldoActual: number; limiteCredito: number; disponible: number }> => {
+    const response = await fetch(`${API_BASE}/clientes/${clienteId}/puede-fiar?monto=${monto}`);
+    return handleResponse<{ puede: boolean; saldoActual: number; limiteCredito: number; disponible: number }>(response);
   },
 };

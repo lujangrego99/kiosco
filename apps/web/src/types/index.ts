@@ -53,7 +53,7 @@ export interface ApiError {
 }
 
 // Venta types
-export type MedioPago = 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA';
+export type MedioPago = 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA' | 'FIADO';
 export type EstadoVenta = 'COMPLETADA' | 'ANULADA';
 
 export interface VentaItem {
@@ -77,6 +77,9 @@ export interface Venta {
   montoRecibido?: number;
   vuelto?: number;
   estado: EstadoVenta;
+  clienteId?: string;
+  clienteNombre?: string;
+  esFiado?: boolean;
   items: VentaItem[];
 }
 
@@ -90,6 +93,7 @@ export interface VentaCreate {
   medioPago: MedioPago;
   descuento?: number;
   montoRecibido?: number;
+  clienteId?: string;
 }
 
 // Cart types (frontend only)
@@ -121,4 +125,33 @@ export interface ClienteCreate {
   email?: string;
   direccion?: string;
   notas?: string;
+}
+
+// Cuenta corriente types
+export type TipoMovimiento = 'CARGO' | 'PAGO' | 'AJUSTE';
+
+export interface CuentaCorriente {
+  clienteId: string;
+  clienteNombre: string;
+  saldo: number;
+  limiteCredito: number;
+  disponible: number;
+  ultimaActualizacion?: string;
+}
+
+export interface Movimiento {
+  id: string;
+  tipo: TipoMovimiento;
+  monto: number;
+  saldoAnterior: number;
+  saldoNuevo: number;
+  referenciaId?: string;
+  descripcion?: string;
+  fecha: string;
+}
+
+export interface Pago {
+  monto: number;
+  medioPago?: string;
+  descripcion?: string;
 }

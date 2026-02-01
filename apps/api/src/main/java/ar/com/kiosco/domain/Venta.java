@@ -31,6 +31,14 @@ public class Venta {
     @Builder.Default
     private LocalDateTime fecha = LocalDateTime.now();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id")
+    private Cliente cliente;
+
+    @Column(name = "es_fiado")
+    @Builder.Default
+    private Boolean esFiado = false;
+
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal subtotal;
 
@@ -72,7 +80,8 @@ public class Venta {
     public enum MedioPago {
         EFECTIVO,
         MERCADOPAGO,
-        TRANSFERENCIA
+        TRANSFERENCIA,
+        FIADO
     }
 
     public enum EstadoVenta {

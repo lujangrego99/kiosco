@@ -1,0 +1,34 @@
+-- V5__cuenta_corriente_schema.sql
+-- Add cuenta corriente (fiado) support
+
+-- This migration documents the addition of cuenta corriente (fiado) feature.
+-- The actual schema changes are in db/tenant/V1__tenant_tables.sql:
+-- - cuenta_corriente table
+-- - cuenta_movimientos table
+-- - cliente_id and es_fiado columns on ventas table
+
+-- For existing tenant schemas, these tables are already included in the template.
+-- If migrating from an older version without these tables, apply manually:
+
+-- ALTER TABLE ventas ADD COLUMN IF NOT EXISTS cliente_id UUID REFERENCES clientes(id);
+-- ALTER TABLE ventas ADD COLUMN IF NOT EXISTS es_fiado BOOLEAN DEFAULT false;
+--
+-- CREATE TABLE IF NOT EXISTS cuenta_corriente (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     cliente_id UUID NOT NULL REFERENCES clientes(id),
+--     saldo DECIMAL(12,2) DEFAULT 0,
+--     limite_credito DECIMAL(12,2) DEFAULT 0,
+--     updated_at TIMESTAMP DEFAULT NOW()
+-- );
+--
+-- CREATE TABLE IF NOT EXISTS cuenta_movimientos (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     cliente_id UUID NOT NULL REFERENCES clientes(id),
+--     tipo VARCHAR(20) NOT NULL,
+--     monto DECIMAL(12,2) NOT NULL,
+--     saldo_anterior DECIMAL(12,2) NOT NULL,
+--     saldo_nuevo DECIMAL(12,2) NOT NULL,
+--     referencia_id UUID,
+--     descripcion TEXT,
+--     created_at TIMESTAMP DEFAULT NOW()
+-- );

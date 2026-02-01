@@ -27,6 +27,9 @@ public class VentaDTO {
     private BigDecimal montoRecibido;
     private BigDecimal vuelto;
     private String estado;
+    private UUID clienteId;
+    private String clienteNombre;
+    private Boolean esFiado;
     private List<VentaItemDTO> items;
 
     public static VentaDTO fromEntity(Venta venta) {
@@ -43,6 +46,9 @@ public class VentaDTO {
                 .montoRecibido(venta.getMontoRecibido())
                 .vuelto(venta.getVuelto())
                 .estado(venta.getEstado().name())
+                .clienteId(venta.getCliente() != null ? venta.getCliente().getId() : null)
+                .clienteNombre(venta.getCliente() != null ? venta.getCliente().getNombre() : null)
+                .esFiado(venta.getEsFiado())
                 .items(venta.getItems() != null
                         ? venta.getItems().stream()
                             .map(VentaItemDTO::fromEntity)

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -29,4 +30,6 @@ public class VentaCreateDTO {
     private BigDecimal descuento;
 
     private BigDecimal montoRecibido;
+
+    private UUID clienteId;
 }
