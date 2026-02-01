@@ -273,6 +273,22 @@ export default function EditarProductoPage() {
           )}
         </div>
 
+        <div className="space-y-4 p-4 border rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label className="text-base">Proveedores</Label>
+              <p className="text-sm text-muted-foreground">
+                Gestiona los proveedores que venden este producto
+              </p>
+            </div>
+            <Link href={`/productos/${params.id}/proveedores`}>
+              <Button type="button" variant="outline">
+                Administrar proveedores
+              </Button>
+            </Link>
+          </div>
+        </div>
+
         <div className="flex gap-4 pt-4">
           <Button type="submit" disabled={loading}>
             {loading ? 'Guardando...' : 'Guardar cambios'}

@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, QrInteroperableResponse, QrResponse, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, ProductoProveedor, ProductoProveedorCreate, Proveedor, ProveedorCreate, QrInteroperableResponse, QrResponse, RecepcionOrden, SugerenciaCompra, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -478,5 +478,185 @@ export const vencimientosApi = {
   resumen: async (): Promise<VencimientoResumen> => {
     const response = await fetch(`${API_BASE}/vencimientos/resumen`);
     return handleResponse<VencimientoResumen>(response);
+  },
+};
+
+// Proveedores API
+export const proveedoresApi = {
+  listar: async (): Promise<Proveedor[]> => {
+    const response = await fetch(`${API_BASE}/proveedores`);
+    return handleResponse<Proveedor[]>(response);
+  },
+
+  obtener: async (id: string): Promise<Proveedor> => {
+    const response = await fetch(`${API_BASE}/proveedores/${id}`);
+    return handleResponse<Proveedor>(response);
+  },
+
+  buscar: async (query: string): Promise<Proveedor[]> => {
+    const response = await fetch(`${API_BASE}/proveedores/buscar?q=${encodeURIComponent(query)}`);
+    return handleResponse<Proveedor[]>(response);
+  },
+
+  crear: async (data: ProveedorCreate): Promise<Proveedor> => {
+    const response = await fetch(`${API_BASE}/proveedores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Proveedor>(response);
+  },
+
+  actualizar: async (id: string, data: ProveedorCreate): Promise<Proveedor> => {
+    const response = await fetch(`${API_BASE}/proveedores/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Proveedor>(response);
+  },
+
+  eliminar: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/proveedores/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
+  },
+
+  listarProductos: async (proveedorId: string): Promise<ProductoProveedor[]> => {
+    const response = await fetch(`${API_BASE}/proveedores/${proveedorId}/productos`);
+    return handleResponse<ProductoProveedor[]>(response);
+  },
+};
+
+// Producto-Proveedor API
+export const productoProveedorApi = {
+  listarPorProducto: async (productoId: string): Promise<ProductoProveedor[]> => {
+    const response = await fetch(`${API_BASE}/productos/${productoId}/proveedores`);
+    return handleResponse<ProductoProveedor[]>(response);
+  },
+
+  asociar: async (productoId: string, data: ProductoProveedorCreate): Promise<ProductoProveedor> => {
+    const response = await fetch(`${API_BASE}/productos/${productoId}/proveedores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ProductoProveedor>(response);
+  },
+
+  actualizar: async (id: string, data: ProductoProveedorCreate): Promise<ProductoProveedor> => {
+    const response = await fetch(`${API_BASE}/producto-proveedor/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ProductoProveedor>(response);
+  },
+
+  actualizarPrecio: async (id: string, precio: number): Promise<ProductoProveedor> => {
+    const response = await fetch(`${API_BASE}/producto-proveedor/${id}/precio?precio=${precio}`, {
+      method: 'PATCH',
+    });
+    return handleResponse<ProductoProveedor>(response);
+  },
+
+  eliminar: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/producto-proveedor/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
+  },
+
+  historialPrecios: async (id: string): Promise<HistorialPrecio[]> => {
+    const response = await fetch(`${API_BASE}/producto-proveedor/${id}/historial-precios`);
+    return handleResponse<HistorialPrecio[]>(response);
+  },
+};
+
+// Ordenes de Compra API
+export const ordenesCompraApi = {
+  listar: async (params?: { estado?: string; proveedorId?: string }): Promise<OrdenCompra[]> => {
+    const queryParams = new URLSearchParams();
+    if (params?.estado) queryParams.append('estado', params.estado);
+    if (params?.proveedorId) queryParams.append('proveedorId', params.proveedorId);
+
+    const url = queryParams.toString()
+      ? `${API_BASE}/ordenes-compra?${queryParams}`
+      : `${API_BASE}/ordenes-compra`;
+
+    const response = await fetch(url);
+    return handleResponse<OrdenCompra[]>(response);
+  },
+
+  obtener: async (id: string): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/ordenes-compra/${id}`);
+    return handleResponse<OrdenCompra>(response);
+  },
+
+  crear: async (data: OrdenCompraCreate): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/ordenes-compra`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<OrdenCompra>(response);
+  },
+
+  actualizar: async (id: string, data: OrdenCompraCreate): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/ordenes-compra/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<OrdenCompra>(response);
+  },
+
+  enviar: async (id: string): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/ordenes-compra/${id}/enviar`, {
+      method: 'POST',
+    });
+    return handleResponse<OrdenCompra>(response);
+  },
+
+  recibir: async (id: string, data: RecepcionOrden): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/ordenes-compra/${id}/recibir`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<OrdenCompra>(response);
+  },
+
+  cancelar: async (id: string): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/ordenes-compra/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<OrdenCompra>(response);
+  },
+};
+
+// Sugerencias de Compra API
+export const sugerenciasCompraApi = {
+  obtener: async (params?: { tipo?: string; dias?: number }): Promise<SugerenciaCompra[]> => {
+    const queryParams = new URLSearchParams();
+    if (params?.tipo) queryParams.append('tipo', params.tipo);
+    if (params?.dias) queryParams.append('dias', params.dias.toString());
+
+    const url = queryParams.toString()
+      ? `${API_BASE}/sugerencias-compra?${queryParams}`
+      : `${API_BASE}/sugerencias-compra`;
+
+    const response = await fetch(url);
+    return handleResponse<SugerenciaCompra[]>(response);
+  },
+
+  generarOrden: async (data: GenerarOrdenDesdeSugerencias): Promise<OrdenCompra> => {
+    const response = await fetch(`${API_BASE}/sugerencias-compra/generar-orden`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<OrdenCompra>(response);
   },
 };

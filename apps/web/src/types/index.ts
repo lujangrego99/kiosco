@@ -366,3 +366,129 @@ export interface VencimientoResumen {
   vencidos: number;
   totalLotesActivos: number;
 }
+
+// Proveedor types
+export interface Proveedor {
+  id: string;
+  nombre: string;
+  cuit?: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  contacto?: string;
+  diasEntrega?: number;
+  notas?: string;
+  activo: boolean;
+}
+
+export interface ProveedorCreate {
+  nombre: string;
+  cuit?: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  contacto?: string;
+  diasEntrega?: number;
+  notas?: string;
+}
+
+// Producto-Proveedor types
+export interface ProductoProveedor {
+  id: string;
+  productoId: string;
+  productoNombre?: string;
+  productoCodigo?: string;
+  proveedorId: string;
+  proveedorNombre?: string;
+  codigoProveedor?: string;
+  precioCompra?: number;
+  ultimoPrecio?: number;
+  fechaUltimoPrecio?: string;
+  esPrincipal: boolean;
+}
+
+export interface ProductoProveedorCreate {
+  proveedorId: string;
+  codigoProveedor?: string;
+  precioCompra?: number;
+  esPrincipal?: boolean;
+}
+
+export interface HistorialPrecio {
+  id: string;
+  precio: number;
+  fecha: string;
+}
+
+// Orden de Compra types
+export type EstadoOrdenCompra = 'BORRADOR' | 'ENVIADA' | 'RECIBIDA' | 'CANCELADA';
+
+export interface OrdenCompraItem {
+  id: string;
+  productoId: string;
+  productoNombre?: string;
+  productoCodigo?: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+  cantidadRecibida: number;
+}
+
+export interface OrdenCompra {
+  id: string;
+  numero: number;
+  proveedorId: string;
+  proveedorNombre?: string;
+  estado: EstadoOrdenCompra;
+  fechaEmision: string;
+  fechaEntregaEsperada?: string;
+  fechaRecepcion?: string;
+  subtotal: number;
+  total: number;
+  notas?: string;
+  items?: OrdenCompraItem[];
+  cantidadItems: number;
+}
+
+export interface OrdenCompraItemCreate {
+  productoId: string;
+  cantidad: number;
+  precioUnitario: number;
+}
+
+export interface OrdenCompraCreate {
+  proveedorId: string;
+  fechaEntregaEsperada?: string;
+  notas?: string;
+  items: OrdenCompraItemCreate[];
+}
+
+export interface RecepcionItem {
+  itemId: string;
+  cantidadRecibida: number;
+}
+
+export interface RecepcionOrden {
+  items: RecepcionItem[];
+}
+
+// Sugerencias de Compra types
+export interface SugerenciaCompra {
+  productoId: string;
+  productoNombre: string;
+  productoCodigo?: string;
+  stockActual: number;
+  stockMinimo: number;
+  promedioVentasDiarias?: number;
+  cantidadSugerida: number;
+  proveedorSugeridoId?: string;
+  proveedorSugeridoNombre?: string;
+  precioEstimado?: number;
+  motivoSugerencia: 'STOCK_BAJO' | 'VENTAS_ALTAS' | 'VENCIMIENTO_PROXIMO';
+}
+
+export interface GenerarOrdenDesdeSugerencias {
+  proveedorId: string;
+  productoIds: string[];
+  notas?: string;
+}
