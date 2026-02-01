@@ -48,6 +48,9 @@ dependencies {
     implementation 'com.google.zxing:core:3.5.2'
     implementation 'com.google.zxing:javase:3.5.2'
 
+    // Mercado Pago SDK
+    implementation 'com.mercadopago:sdk-java:2.1.24'
+
     runtimeOnly 'org.postgresql:postgresql'
 
     compileOnly 'org.projectlombok:lombok'

@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, CuentaCorriente, EmitirFactura, Movimiento, Pago, Producto, ProductoCreate, ValidacionCuit, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, MetodosPagoHabilitados, Movimiento, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, QrInteroperableResponse, QrResponse, ValidacionCuit, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -330,5 +330,97 @@ export const facturacionApi = {
 
   getPdfUrl: (id: string): string => {
     return `${API_BASE}/facturacion/${id}/pdf/preview`;
+  },
+};
+
+// Configuración de Pagos API
+export const configPagosApi = {
+  obtener: async (): Promise<ConfigPagos> => {
+    const response = await fetch(`${API_BASE}/config/pagos`);
+    return handleResponse<ConfigPagos>(response);
+  },
+
+  guardar: async (data: ConfigPagosCreate): Promise<ConfigPagos> => {
+    const response = await fetch(`${API_BASE}/config/pagos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ConfigPagos>(response);
+  },
+
+  actualizar: async (data: ConfigPagosCreate): Promise<ConfigPagos> => {
+    const response = await fetch(`${API_BASE}/config/pagos`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ConfigPagos>(response);
+  },
+
+  actualizarMetodos: async (data: ConfigPagosCreate): Promise<ConfigPagos> => {
+    const response = await fetch(`${API_BASE}/config/pagos/metodos`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ConfigPagos>(response);
+  },
+
+  obtenerMetodosHabilitados: async (): Promise<MetodosPagoHabilitados> => {
+    const response = await fetch(`${API_BASE}/config/pagos/metodos-habilitados`);
+    return handleResponse<MetodosPagoHabilitados>(response);
+  },
+
+  verificarMercadoPago: async (): Promise<VerificacionMp> => {
+    const response = await fetch(`${API_BASE}/config/pagos/verificar-mp`);
+    return handleResponse<VerificacionMp>(response);
+  },
+};
+
+// Pagos API (payment operations)
+export const pagosApi = {
+  // Mercado Pago
+  crearPreferencia: async (monto: number, descripcion: string, externalReference: string): Promise<PreferenciaResponse> => {
+    const response = await fetch(`${API_BASE}/pagos/mp/preferencia`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto, descripcion, externalReference }),
+    });
+    return handleResponse<PreferenciaResponse>(response);
+  },
+
+  crearQrMp: async (monto: number, descripcion: string): Promise<QrResponse> => {
+    const response = await fetch(`${API_BASE}/pagos/mp/qr`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto, descripcion }),
+    });
+    return handleResponse<QrResponse>(response);
+  },
+
+  verificarPago: async (paymentId: string): Promise<PaymentStatus> => {
+    const response = await fetch(`${API_BASE}/pagos/mp/status/${paymentId}`);
+    return handleResponse<PaymentStatus>(response);
+  },
+
+  verificarPagoPorPreferencia: async (preferenceId: string): Promise<PaymentStatus> => {
+    const response = await fetch(`${API_BASE}/pagos/mp/status/preference/${preferenceId}`);
+    return handleResponse<PaymentStatus>(response);
+  },
+
+  // QR Interoperable
+  generarQr: async (monto: number, descripcion: string): Promise<QrInteroperableResponse> => {
+    const response = await fetch(`${API_BASE}/pagos/qr/generar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monto, descripcion }),
+    });
+    return handleResponse<QrInteroperableResponse>(response);
+  },
+
+  obtenerQrEstatico: async (): Promise<QrInteroperableResponse> => {
+    const response = await fetch(`${API_BASE}/pagos/qr/estatico`);
+    return handleResponse<QrInteroperableResponse>(response);
   },
 };

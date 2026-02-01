@@ -253,3 +253,80 @@ export interface EmitirFactura {
   cuitReceptor?: string;
   condicionIvaReceptor?: string;
 }
+
+// Payment configuration types
+export type EstadoPagos = 'BASICO' | 'PARCIAL' | 'COMPLETO';
+
+export interface ConfigPagos {
+  id?: string;
+  mpConfigurado: boolean;
+  mpPublicKey?: string;
+  mpUserId?: string;
+  qrAlias?: string;
+  qrCbu?: string;
+  qrConfigurado: boolean;
+  aceptaEfectivo: boolean;
+  aceptaDebito: boolean;
+  aceptaCredito: boolean;
+  aceptaMercadopago: boolean;
+  aceptaQr: boolean;
+  aceptaTransferencia: boolean;
+  estado: EstadoPagos;
+}
+
+export interface ConfigPagosCreate {
+  mpAccessToken?: string;
+  mpPublicKey?: string;
+  qrAlias?: string;
+  qrCbu?: string;
+  aceptaEfectivo?: boolean;
+  aceptaDebito?: boolean;
+  aceptaCredito?: boolean;
+  aceptaMercadopago?: boolean;
+  aceptaQr?: boolean;
+  aceptaTransferencia?: boolean;
+}
+
+export interface MetodosPagoHabilitados {
+  efectivo: boolean;
+  debito: boolean;
+  credito: boolean;
+  mercadopago: boolean;
+  qr: boolean;
+  transferencia: boolean;
+  fiado: boolean;
+}
+
+export interface VerificacionMp {
+  valido: boolean;
+  estado: string;
+  mensaje: string;
+}
+
+export interface PreferenciaResponse {
+  preferenceId: string;
+  initPoint: string;
+  sandboxInitPoint: string;
+}
+
+export interface QrResponse {
+  preferenceId?: string;
+  qrContent: string;
+  monto: number;
+}
+
+export interface QrInteroperableResponse {
+  qrContent: string;
+  qrImageBase64: string;
+  alias: string;
+  monto: number;
+  descripcion?: string;
+}
+
+export interface PaymentStatus {
+  paymentId?: string;
+  status: string;
+  statusDetail?: string;
+  amount?: number;
+  externalReference?: string;
+}
