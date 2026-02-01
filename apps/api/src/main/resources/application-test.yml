@@ -12,3 +12,7 @@ spring:
 
   flyway:
     enabled: false
+
+jwt:
+  secret: test-secret-key-for-testing-purposes-only
+  expiration: 86400000
