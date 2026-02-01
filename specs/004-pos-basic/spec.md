@@ -4,7 +4,7 @@
 
 ## Priority: 4
 
-## Status: INCOMPLETE
+## Status: COMPLETE
 
 ---
 
@@ -122,20 +122,20 @@ GET    /api/ventas/ultimo-numero    → Proximo numero de venta
 
 ## Acceptance Criteria
 
-- [ ] Se puede buscar productos por nombre
-- [ ] Se puede buscar productos por codigo de barras
-- [ ] Click en producto lo agrega al carrito
-- [ ] Se puede modificar cantidad en carrito
-- [ ] Se puede eliminar item del carrito
-- [ ] Total se calcula correctamente
-- [ ] Se puede cobrar en efectivo con calculo de vuelto
-- [ ] Se puede cobrar con MP/Transferencia
-- [ ] Venta se guarda en base de datos
-- [ ] Stock se descuenta automaticamente
-- [ ] Carrito se limpia despues de cobrar
-- [ ] Shortcuts de teclado funcionan
-- [ ] `./gradlew test` pasa
-- [ ] `pnpm lint && pnpm typecheck` pasa
+- [x] Se puede buscar productos por nombre
+- [x] Se puede buscar productos por codigo de barras
+- [x] Click en producto lo agrega al carrito
+- [x] Se puede modificar cantidad en carrito
+- [x] Se puede eliminar item del carrito
+- [x] Total se calcula correctamente
+- [x] Se puede cobrar en efectivo con calculo de vuelto
+- [x] Se puede cobrar con MP/Transferencia
+- [x] Venta se guarda en base de datos
+- [x] Stock se descuenta automaticamente
+- [x] Carrito se limpia despues de cobrar
+- [x] Shortcuts de teclado funcionan
+- [x] `./gradlew test` pasa
+- [x] `pnpm lint && pnpm typecheck` pasa
 
 ---
 

@@ -51,3 +51,49 @@ export interface ApiError {
   message?: string;
   errors?: Record<string, string>;
 }
+
+// Venta types
+export type MedioPago = 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA';
+export type EstadoVenta = 'COMPLETADA' | 'ANULADA';
+
+export interface VentaItem {
+  id: string;
+  productoId: string;
+  productoNombre: string;
+  productoCodigo?: string;
+  cantidad: number;
+  precioUnitario: number;
+  subtotal: number;
+}
+
+export interface Venta {
+  id: string;
+  numero: number;
+  fecha: string;
+  subtotal: number;
+  descuento: number;
+  total: number;
+  medioPago: MedioPago;
+  montoRecibido?: number;
+  vuelto?: number;
+  estado: EstadoVenta;
+  items: VentaItem[];
+}
+
+export interface VentaItemCreate {
+  productoId: string;
+  cantidad: number;
+}
+
+export interface VentaCreate {
+  items: VentaItemCreate[];
+  medioPago: MedioPago;
+  descuento?: number;
+  montoRecibido?: number;
+}
+
+// Cart types (frontend only)
+export interface CartItem {
+  producto: Producto;
+  cantidad: number;
+}

@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Producto, ProductoCreate } from '@/types';
+import type { Categoria, CategoriaCreate, Producto, ProductoCreate, Venta, VentaCreate } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -116,5 +116,39 @@ export const productosApi = {
       method: 'PATCH',
     });
     return handleResponse<Producto>(response);
+  },
+};
+
+// Ventas API
+export const ventasApi = {
+  crear: async (data: VentaCreate): Promise<Venta> => {
+    const response = await fetch(`${API_BASE}/ventas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Venta>(response);
+  },
+
+  obtener: async (id: string): Promise<Venta> => {
+    const response = await fetch(`${API_BASE}/ventas/${id}`);
+    return handleResponse<Venta>(response);
+  },
+
+  obtenerHoy: async (): Promise<Venta[]> => {
+    const response = await fetch(`${API_BASE}/ventas/hoy`);
+    return handleResponse<Venta[]>(response);
+  },
+
+  anular: async (id: string): Promise<Venta> => {
+    const response = await fetch(`${API_BASE}/ventas/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<Venta>(response);
+  },
+
+  obtenerProximoNumero: async (): Promise<{ proximoNumero: number }> => {
+    const response = await fetch(`${API_BASE}/ventas/ultimo-numero`);
+    return handleResponse<{ proximoNumero: number }>(response);
   },
 };
