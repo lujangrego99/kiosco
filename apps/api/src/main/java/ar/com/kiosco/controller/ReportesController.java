@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/reportes")
@@ -99,5 +100,68 @@ public class ReportesController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
                 .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
                 .body(csv);
+    }
+
+    // =====================
+    // ADVANCED REPORTS (Spec 016)
+    // =====================
+
+    @GetMapping("/rentabilidad/productos")
+    public ResponseEntity<List<RentabilidadProductoDTO>> getRentabilidadProductos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return ResponseEntity.ok(reportesService.getRentabilidadProductos(desde, hasta));
+    }
+
+    @GetMapping("/rentabilidad/categorias")
+    public ResponseEntity<List<RentabilidadCategoriaDTO>> getRentabilidadCategorias(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return ResponseEntity.ok(reportesService.getRentabilidadCategorias(desde, hasta));
+    }
+
+    @GetMapping("/tendencias/ventas")
+    public ResponseEntity<List<TendenciaDTO>> getTendenciasVentas(
+            @RequestParam(defaultValue = "6") int meses) {
+        return ResponseEntity.ok(reportesService.getTendenciasVentas(meses));
+    }
+
+    @GetMapping("/tendencias/productos/{id}")
+    public ResponseEntity<TendenciaProductoDTO> getTendenciaProducto(
+            @PathVariable UUID id,
+            @RequestParam(defaultValue = "6") int meses) {
+        TendenciaProductoDTO tendencia = reportesService.getTendenciaProducto(id, meses);
+        if (tendencia == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(tendencia);
+    }
+
+    @GetMapping("/comparativo/periodos")
+    public ResponseEntity<ComparativoDTO> getComparativoPeriodos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodo1Desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodo1Hasta,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodo2Desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate periodo2Hasta) {
+        return ResponseEntity.ok(reportesService.getComparativoPeriodos(
+                periodo1Desde, periodo1Hasta, periodo2Desde, periodo2Hasta));
+    }
+
+    @GetMapping("/abc/productos")
+    public ResponseEntity<List<ProductoAbcDTO>> getAnalisisABC(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+        return ResponseEntity.ok(reportesService.getAnalisisABC(desde, hasta));
+    }
+
+    @GetMapping("/proyeccion/ventas")
+    public ResponseEntity<ProyeccionVentasDTO> getProyeccionVentas(
+            @RequestParam(defaultValue = "30") int dias) {
+        return ResponseEntity.ok(reportesService.getProyeccionVentas(dias));
+    }
+
+    @GetMapping("/insights")
+    public ResponseEntity<List<InsightDTO>> getInsights() {
+        return ResponseEntity.ok(reportesService.getInsights());
     }
 }

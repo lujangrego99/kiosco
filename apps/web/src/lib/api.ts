@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, QrInteroperableResponse, QrResponse, RecepcionOrden, ResumenCaja, ResumenDashboard, SugerenciaCompra, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comparativo, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Insight, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoAbc, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, ProyeccionVentas, QrInteroperableResponse, QrResponse, RecepcionOrden, RentabilidadCategoria, RentabilidadProducto, ResumenCaja, ResumenDashboard, SugerenciaCompra, Tendencia, TendenciaProducto, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -717,5 +717,57 @@ export const reportesApi = {
       throw new Error('Error al exportar');
     }
     return response.blob();
+  },
+
+  // Advanced Reports (Spec 016)
+  getRentabilidadProductos: async (desde: string, hasta: string): Promise<RentabilidadProducto[]> => {
+    const response = await fetch(`${API_BASE}/reportes/rentabilidad/productos?desde=${desde}&hasta=${hasta}`);
+    return handleResponse<RentabilidadProducto[]>(response);
+  },
+
+  getRentabilidadCategorias: async (desde: string, hasta: string): Promise<RentabilidadCategoria[]> => {
+    const response = await fetch(`${API_BASE}/reportes/rentabilidad/categorias?desde=${desde}&hasta=${hasta}`);
+    return handleResponse<RentabilidadCategoria[]>(response);
+  },
+
+  getTendenciasVentas: async (meses: number = 6): Promise<Tendencia[]> => {
+    const response = await fetch(`${API_BASE}/reportes/tendencias/ventas?meses=${meses}`);
+    return handleResponse<Tendencia[]>(response);
+  },
+
+  getTendenciaProducto: async (productoId: string, meses: number = 6): Promise<TendenciaProducto> => {
+    const response = await fetch(`${API_BASE}/reportes/tendencias/productos/${productoId}?meses=${meses}`);
+    return handleResponse<TendenciaProducto>(response);
+  },
+
+  getComparativoPeriodos: async (
+    periodo1Desde: string,
+    periodo1Hasta: string,
+    periodo2Desde: string,
+    periodo2Hasta: string
+  ): Promise<Comparativo> => {
+    const params = new URLSearchParams({
+      periodo1Desde,
+      periodo1Hasta,
+      periodo2Desde,
+      periodo2Hasta,
+    });
+    const response = await fetch(`${API_BASE}/reportes/comparativo/periodos?${params}`);
+    return handleResponse<Comparativo>(response);
+  },
+
+  getAnalisisABC: async (desde: string, hasta: string): Promise<ProductoAbc[]> => {
+    const response = await fetch(`${API_BASE}/reportes/abc/productos?desde=${desde}&hasta=${hasta}`);
+    return handleResponse<ProductoAbc[]>(response);
+  },
+
+  getProyeccionVentas: async (dias: number = 30): Promise<ProyeccionVentas> => {
+    const response = await fetch(`${API_BASE}/reportes/proyeccion/ventas?dias=${dias}`);
+    return handleResponse<ProyeccionVentas>(response);
+  },
+
+  getInsights: async (): Promise<Insight[]> => {
+    const response = await fetch(`${API_BASE}/reportes/insights`);
+    return handleResponse<Insight[]>(response);
   },
 };

@@ -11,6 +11,10 @@ import {
   BarChart3,
   Clock,
   FileText,
+  Percent,
+  LineChart,
+  Scale,
+  LayoutDashboard,
 } from 'lucide-react';
 import { reportesApi } from '@/lib/api';
 import type { ResumenDashboard } from '@/types';
@@ -189,6 +193,90 @@ export default function ReportesPage() {
                 <CardTitle className="text-base">Resumen de caja</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Movimientos del día
+                </p>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Advanced Reports */}
+      <h2 className="text-xl font-semibold mb-4 mt-8">Reportes Avanzados</h2>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Link href="/reportes/ejecutivo">
+          <Card className="cursor-pointer hover:bg-accent transition-colors border-2 border-primary/20">
+            <CardHeader className="flex flex-row items-center space-y-0 gap-4">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <LayoutDashboard className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Dashboard Ejecutivo</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Resumen con insights automáticos
+                </p>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/reportes/rentabilidad">
+          <Card className="cursor-pointer hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center space-y-0 gap-4">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Percent className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Rentabilidad</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Márgenes por producto y categoría
+                </p>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/reportes/tendencias">
+          <Card className="cursor-pointer hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center space-y-0 gap-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <LineChart className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Tendencias</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Evolución y proyecciones
+                </p>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/reportes/analisis-abc">
+          <Card className="cursor-pointer hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center space-y-0 gap-4">
+              <div className="p-2 bg-yellow-100 rounded-lg">
+                <BarChart3 className="h-6 w-6 text-yellow-600" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Análisis ABC</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Clasificación por importancia
+                </p>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
+
+        <Link href="/reportes/comparativo">
+          <Card className="cursor-pointer hover:bg-accent transition-colors">
+            <CardHeader className="flex flex-row items-center space-y-0 gap-4">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Scale className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle className="text-base">Comparativo</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Compará períodos
                 </p>
               </div>
             </CardHeader>

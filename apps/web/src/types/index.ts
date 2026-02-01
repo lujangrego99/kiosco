@@ -558,3 +558,100 @@ export interface ResumenCaja {
   saldoTeorico: number;
   diferencia: number;
 }
+
+// Advanced Reports types (Spec 016)
+export interface RentabilidadProducto {
+  productoId: string;
+  nombre: string;
+  categoria: string;
+  cantidadVendida: number;
+  ingresos: number;
+  costos: number;
+  margenBruto: number;
+  margenPorcentaje: number;
+  rentabilidadPorUnidad: number;
+}
+
+export interface RentabilidadCategoria {
+  categoriaId: string | null;
+  nombre: string;
+  cantidadProductos: number;
+  cantidadVendida: number;
+  ingresos: number;
+  costos: number;
+  margenBruto: number;
+  margenPorcentaje: number;
+}
+
+export interface Tendencia {
+  periodo: string;
+  ventas: number;
+  cantidadVentas: number;
+  variacion: number;
+  variacionPorcentaje: number;
+}
+
+export interface TendenciaPeriodo {
+  periodo: string;
+  cantidadVendida: number;
+  ingresos: number;
+}
+
+export interface TendenciaProducto {
+  productoId: string;
+  nombre: string;
+  categoria: string;
+  periodos: TendenciaPeriodo[];
+  tendenciaGeneral: number;
+}
+
+export interface ComparativoItem {
+  concepto: string;
+  periodo1: number;
+  periodo2: number;
+  diferencia: number;
+  variacionPorcentaje: number;
+}
+
+export interface Comparativo {
+  periodo1Desde: string;
+  periodo1Hasta: string;
+  periodo2Desde: string;
+  periodo2Hasta: string;
+  items: ComparativoItem[];
+}
+
+export interface ProductoAbc {
+  productoId: string;
+  nombre: string;
+  categoria: string;
+  ventas: number;
+  porcentajeVentas: number;
+  porcentajeAcumulado: number;
+  clasificacion: 'A' | 'B' | 'C';
+}
+
+export interface ProyeccionDia {
+  fecha: string;
+  ventaProyectada: number;
+  esProyeccion: boolean;
+}
+
+export interface ProyeccionVentas {
+  fechaDesde: string;
+  fechaHasta: string;
+  diasProyectados: number;
+  ventasProyectadas: number;
+  promedioHistorico: number;
+  proyeccionDiaria: ProyeccionDia[];
+}
+
+export type InsightTipo = 'SUCCESS' | 'WARNING' | 'INFO' | 'DANGER';
+
+export interface Insight {
+  tipo: InsightTipo;
+  icono: string;
+  titulo: string;
+  descripcion: string;
+  accion: string | null;
+}
