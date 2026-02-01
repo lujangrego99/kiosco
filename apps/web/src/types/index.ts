@@ -655,3 +655,93 @@ export interface Insight {
   descripcion: string;
   accion: string | null;
 }
+
+// Cadena (Multi-Kiosco) types
+export interface KioscoResumen {
+  id: string;
+  nombre: string;
+  slug: string;
+  esCasaCentral: boolean;
+  ventasHoy: number;
+  ventasMes: number;
+  activo: boolean;
+}
+
+export interface Cadena {
+  id: string;
+  nombre: string;
+  ownerId: string;
+  ownerNombre: string;
+  kioscos?: KioscoResumen[];
+  totalKioscos: number;
+  createdAt: string;
+}
+
+export interface CadenaCreate {
+  nombre: string;
+}
+
+export type RolCadena = 'OWNER' | 'ADMIN' | 'VIEWER';
+
+export interface CadenaMember {
+  id: string;
+  cadenaId: string;
+  usuarioId: string;
+  usuarioNombre: string;
+  usuarioEmail: string;
+  rol: RolCadena;
+  puedeVerTodos: boolean;
+  kioscosPermitidos: string[] | null;
+  createdAt: string;
+}
+
+export interface CadenaMemberCreate {
+  usuarioId: string;
+  rol: RolCadena;
+  puedeVerTodos?: boolean;
+  kioscosPermitidos?: string[];
+}
+
+export interface AgregarKioscoACadena {
+  kioscoId: string;
+  esCasaCentral?: boolean;
+}
+
+export interface VentaPorKiosco {
+  kioscoId: string;
+  kioscoNombre: string;
+  ventas: number;
+  cantidad: number;
+  porcentajeDelTotal: number;
+}
+
+export interface ReporteConsolidado {
+  desde: string;
+  hasta: string;
+  ventasTotal: number;
+  cantidadVentas: number;
+  ticketPromedio: number;
+  porKiosco: VentaPorKiosco[];
+}
+
+export interface RankingKiosco {
+  posicion: number;
+  kioscoId: string;
+  kioscoNombre: string;
+  ventas: number;
+  variacionVsMesAnterior: number;
+}
+
+export interface StockPorKiosco {
+  kioscoId: string;
+  kioscoNombre: string;
+  stock: number;
+}
+
+export interface StockConsolidado {
+  productoId: string;
+  productoNombre: string;
+  productoCodigo: string;
+  stockTotal: number;
+  stockPorKiosco: StockPorKiosco[];
+}

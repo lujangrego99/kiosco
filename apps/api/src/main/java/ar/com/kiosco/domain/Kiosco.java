@@ -52,6 +52,14 @@ public class Kiosco {
     @Builder.Default
     private Boolean activo = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cadena_id")
+    private Cadena cadena;
+
+    @Column(name = "es_casa_central")
+    @Builder.Default
+    private Boolean esCasaCentral = false;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Package, Tags, ShoppingCart, Calendar } from 'lucide-react'
+import { Package, Tags, ShoppingCart, Calendar, Building2 } from 'lucide-react'
 import { VencimientosAlerta } from '@/components/vencimientos'
 
 export default function Home() {
@@ -59,6 +59,17 @@ export default function Home() {
             <h2 className="text-xl font-semibold mb-2">Vencimientos</h2>
             <p className="text-muted-foreground text-sm">
               Control de productos proximos a vencer
+            </p>
+          </Link>
+
+          <Link
+            href="/cadena"
+            className="block p-6 bg-card rounded-lg border hover:border-primary transition-colors"
+          >
+            <Building2 className="h-12 w-12 mb-4 text-primary" />
+            <h2 className="text-xl font-semibold mb-2">Multi-Kiosco</h2>
+            <p className="text-muted-foreground text-sm">
+              Gestiona multiples sucursales y reportes consolidados
             </p>
           </Link>
         </div>

@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comparativo, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Insight, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoAbc, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, ProyeccionVentas, QrInteroperableResponse, QrResponse, RecepcionOrden, RentabilidadCategoria, RentabilidadProducto, ResumenCaja, ResumenDashboard, SugerenciaCompra, Tendencia, TendenciaProducto, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
+import type { AgregarKioscoACadena, Cadena, CadenaCreate, CadenaMember, CadenaMemberCreate, Categoria, CategoriaCreate, Cliente, ClienteCreate, Comparativo, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Insight, KioscoResumen, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoAbc, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, ProyeccionVentas, QrInteroperableResponse, QrResponse, RankingKiosco, RecepcionOrden, RentabilidadCategoria, RentabilidadProducto, ReporteConsolidado, ResumenCaja, ResumenDashboard, StockConsolidado, SugerenciaCompra, Tendencia, TendenciaProducto, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -769,5 +769,113 @@ export const reportesApi = {
   getInsights: async (): Promise<Insight[]> => {
     const response = await fetch(`${API_BASE}/reportes/insights`);
     return handleResponse<Insight[]>(response);
+  },
+};
+
+// Cadenas API (Multi-Kiosco)
+export const cadenasApi = {
+  listar: async (): Promise<Cadena[]> => {
+    const response = await fetch(`${API_BASE}/cadenas`);
+    return handleResponse<Cadena[]>(response);
+  },
+
+  obtener: async (id: string): Promise<Cadena> => {
+    const response = await fetch(`${API_BASE}/cadenas/${id}`);
+    return handleResponse<Cadena>(response);
+  },
+
+  crear: async (data: CadenaCreate): Promise<Cadena> => {
+    const response = await fetch(`${API_BASE}/cadenas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Cadena>(response);
+  },
+
+  actualizar: async (id: string, data: CadenaCreate): Promise<Cadena> => {
+    const response = await fetch(`${API_BASE}/cadenas/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Cadena>(response);
+  },
+
+  // Kioscos management
+  listarKioscos: async (cadenaId: string): Promise<KioscoResumen[]> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/kioscos`);
+    return handleResponse<KioscoResumen[]>(response);
+  },
+
+  agregarKiosco: async (cadenaId: string, data: AgregarKioscoACadena): Promise<void> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/kioscos`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<void>(response);
+  },
+
+  quitarKiosco: async (cadenaId: string, kioscoId: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/kioscos/${kioscoId}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
+  },
+
+  // Reports
+  getReporteVentas: async (
+    cadenaId: string,
+    desde: string,
+    hasta: string
+  ): Promise<ReporteConsolidado> => {
+    const response = await fetch(
+      `${API_BASE}/cadenas/${cadenaId}/reportes/ventas?desde=${desde}&hasta=${hasta}`
+    );
+    return handleResponse<ReporteConsolidado>(response);
+  },
+
+  getReportePorKiosco: async (
+    cadenaId: string,
+    desde: string,
+    hasta: string
+  ): Promise<ReporteConsolidado> => {
+    const response = await fetch(
+      `${API_BASE}/cadenas/${cadenaId}/reportes/por-kiosco?desde=${desde}&hasta=${hasta}`
+    );
+    return handleResponse<ReporteConsolidado>(response);
+  },
+
+  getRanking: async (cadenaId: string): Promise<RankingKiosco[]> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/reportes/ranking`);
+    return handleResponse<RankingKiosco[]>(response);
+  },
+
+  getStockConsolidado: async (cadenaId: string): Promise<StockConsolidado[]> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/stock`);
+    return handleResponse<StockConsolidado[]>(response);
+  },
+
+  // Members management
+  listarMembers: async (cadenaId: string): Promise<CadenaMember[]> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/members`);
+    return handleResponse<CadenaMember[]>(response);
+  },
+
+  agregarMember: async (cadenaId: string, data: CadenaMemberCreate): Promise<CadenaMember> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<CadenaMember>(response);
+  },
+
+  quitarMember: async (cadenaId: string, memberId: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/cadenas/${cadenaId}/members/${memberId}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
   },
 };

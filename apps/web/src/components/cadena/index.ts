@@ -1,0 +1,1 @@
+export { KioscoSelector } from './KioscoSelector';
