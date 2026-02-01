@@ -492,3 +492,69 @@ export interface GenerarOrdenDesdeSugerencias {
   productoIds: string[];
   notas?: string;
 }
+
+// Reportes types
+export interface ResumenDashboard {
+  ventasHoy: number;
+  cantidadVentasHoy: number;
+  ventasMes: number;
+  cantidadVentasMes: number;
+  ticketPromedio: number;
+  productosVendidosHoy: number;
+  productosStockBajo: number;
+  productosProximosVencer: number;
+}
+
+export interface VentaDiaria {
+  fecha: string;
+  cantidadVentas: number;
+  totalVentas: number;
+  ticketPromedio: number;
+  porMedioPago: Record<string, number>;
+}
+
+export interface VentaRango {
+  desde: string;
+  hasta: string;
+  totalVentas: number;
+  montoTotal: number;
+  ticketPromedio: number;
+  porMedioPago: Record<string, number>;
+  porDia: VentaDiaria[];
+}
+
+export interface VentaPorHora {
+  hora: number;
+  cantidadVentas: number;
+  total: number;
+}
+
+export interface ProductoMasVendido {
+  productoId: string;
+  nombre: string;
+  categoria: string;
+  cantidadVendida: number;
+  montoTotal: number;
+  margenTotal: number;
+}
+
+export interface ProductoSinMovimiento {
+  productoId: string;
+  nombre: string;
+  categoria: string;
+  stockActual: number;
+  ultimaVenta: string | null;
+  diasSinMovimiento: number;
+}
+
+export interface ResumenCaja {
+  fecha: string;
+  saldoInicial: number;
+  ingresos: number;
+  egresos: number;
+  ventasEfectivo: number;
+  ventasDigital: number;
+  saldoFinal: number;
+  saldoTeorico: number;
+  diferencia: number;
+}

@@ -27,4 +27,7 @@ public interface LoteRepository extends JpaRepository<Lote, UUID> {
 
     @Query("SELECT SUM(l.cantidadDisponible) FROM Lote l WHERE l.producto.id = :productoId AND l.cantidadDisponible > 0")
     BigDecimal sumCantidadDisponibleByProductoId(@Param("productoId") UUID productoId);
+
+    @Query("SELECT COUNT(DISTINCT l.producto.id) FROM Lote l WHERE l.fechaVencimiento <= :fechaLimite AND l.fechaVencimiento > CURRENT_DATE AND l.cantidadDisponible > 0")
+    int countProximosAVencer(@Param("fechaLimite") LocalDate fechaLimite);
 }

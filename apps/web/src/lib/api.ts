@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, ProductoProveedor, ProductoProveedorCreate, Proveedor, ProveedorCreate, QrInteroperableResponse, QrResponse, RecepcionOrden, SugerenciaCompra, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, QrInteroperableResponse, QrResponse, RecepcionOrden, ResumenCaja, ResumenDashboard, SugerenciaCompra, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -658,5 +658,64 @@ export const sugerenciasCompraApi = {
       body: JSON.stringify(data),
     });
     return handleResponse<OrdenCompra>(response);
+  },
+};
+
+// Reportes API
+export const reportesApi = {
+  getDashboard: async (): Promise<ResumenDashboard> => {
+    const response = await fetch(`${API_BASE}/reportes/dashboard`);
+    return handleResponse<ResumenDashboard>(response);
+  },
+
+  getVentaDiaria: async (fecha: string): Promise<VentaDiaria> => {
+    const response = await fetch(`${API_BASE}/reportes/ventas/diario?fecha=${fecha}`);
+    return handleResponse<VentaDiaria>(response);
+  },
+
+  getVentasRango: async (desde: string, hasta: string): Promise<VentaRango> => {
+    const response = await fetch(`${API_BASE}/reportes/ventas/rango?desde=${desde}&hasta=${hasta}`);
+    return handleResponse<VentaRango>(response);
+  },
+
+  getVentasPorHora: async (fecha: string): Promise<VentaPorHora[]> => {
+    const response = await fetch(`${API_BASE}/reportes/ventas/por-hora?fecha=${fecha}`);
+    return handleResponse<VentaPorHora[]>(response);
+  },
+
+  getVentasPorMedioPago: async (desde: string, hasta: string): Promise<Record<string, number>> => {
+    const response = await fetch(`${API_BASE}/reportes/ventas/por-medio-pago?desde=${desde}&hasta=${hasta}`);
+    return handleResponse<Record<string, number>>(response);
+  },
+
+  getProductosMasVendidos: async (desde: string, hasta: string, limit: number = 20): Promise<ProductoMasVendido[]> => {
+    const response = await fetch(`${API_BASE}/reportes/productos/mas-vendidos?desde=${desde}&hasta=${hasta}&limit=${limit}`);
+    return handleResponse<ProductoMasVendido[]>(response);
+  },
+
+  getProductosSinMovimiento: async (dias: number = 30): Promise<ProductoSinMovimiento[]> => {
+    const response = await fetch(`${API_BASE}/reportes/productos/sin-movimiento?dias=${dias}`);
+    return handleResponse<ProductoSinMovimiento[]>(response);
+  },
+
+  getResumenCaja: async (fecha: string): Promise<ResumenCaja> => {
+    const response = await fetch(`${API_BASE}/reportes/caja/resumen?fecha=${fecha}`);
+    return handleResponse<ResumenCaja>(response);
+  },
+
+  exportarVentasCSV: async (desde: string, hasta: string): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/reportes/ventas/exportar?desde=${desde}&hasta=${hasta}`);
+    if (!response.ok) {
+      throw new Error('Error al exportar');
+    }
+    return response.blob();
+  },
+
+  exportarProductosMasVendidosCSV: async (desde: string, hasta: string, limit: number = 100): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/reportes/productos/mas-vendidos/exportar?desde=${desde}&hasta=${hasta}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error('Error al exportar');
+    }
+    return response.blob();
   },
 };
