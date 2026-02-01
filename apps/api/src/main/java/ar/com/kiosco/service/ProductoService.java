@@ -122,6 +122,8 @@ public class ProductoService {
                 .stockActual(dto.getStockActual() != null ? dto.getStockActual() : BigDecimal.ZERO)
                 .stockMinimo(dto.getStockMinimo() != null ? dto.getStockMinimo() : BigDecimal.ZERO)
                 .esFavorito(dto.getEsFavorito() != null ? dto.getEsFavorito() : false)
+                .controlaVencimiento(dto.getControlaVencimiento() != null ? dto.getControlaVencimiento() : false)
+                .diasAlertaVencimiento(dto.getDiasAlertaVencimiento() != null ? dto.getDiasAlertaVencimiento() : 7)
                 .activo(true)
                 .build();
 
@@ -158,6 +160,12 @@ public class ProductoService {
         }
         if (dto.getEsFavorito() != null) {
             producto.setEsFavorito(dto.getEsFavorito());
+        }
+        if (dto.getControlaVencimiento() != null) {
+            producto.setControlaVencimiento(dto.getControlaVencimiento());
+        }
+        if (dto.getDiasAlertaVencimiento() != null) {
+            producto.setDiasAlertaVencimiento(dto.getDiasAlertaVencimiento());
         }
 
         producto = productoRepository.save(producto);

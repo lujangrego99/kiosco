@@ -32,6 +32,7 @@ public class VentaService {
     private final ProductoRepository productoRepository;
     private final ClienteRepository clienteRepository;
     private final CuentaCorrienteService cuentaCorrienteService;
+    private final LoteService loteService;
 
     @Transactional(readOnly = true)
     public VentaDTO obtenerPorId(UUID id) {
@@ -124,9 +125,13 @@ public class VentaService {
 
             venta.addItem(item);
 
-            // Deduct stock
-            producto.setStockActual(producto.getStockActual().subtract(itemDto.getCantidad()));
-            productoRepository.save(producto);
+            // Deduct stock (FEFO for products with expiration control)
+            if (Boolean.TRUE.equals(producto.getControlaVencimiento())) {
+                loteService.descontarStock(producto.getId(), itemDto.getCantidad());
+            } else {
+                producto.setStockActual(producto.getStockActual().subtract(itemDto.getCantidad()));
+                productoRepository.save(producto);
+            }
         }
 
         // Set totals
@@ -178,8 +183,12 @@ public class VentaService {
         for (VentaItem item : venta.getItems()) {
             if (item.getProducto() != null) {
                 Producto producto = item.getProducto();
-                producto.setStockActual(producto.getStockActual().add(item.getCantidad()));
-                productoRepository.save(producto);
+                if (Boolean.TRUE.equals(producto.getControlaVencimiento())) {
+                    loteService.restaurarStock(producto.getId(), item.getCantidad());
+                } else {
+                    producto.setStockActual(producto.getStockActual().add(item.getCantidad()));
+                    productoRepository.save(producto);
+                }
             }
         }
 

@@ -46,4 +46,9 @@ public class ProductoCreateDTO {
     private BigDecimal stockMinimo;
 
     private Boolean esFavorito;
+
+    private Boolean controlaVencimiento;
+
+    @DecimalMin(value = "1", message = "Los dias de alerta deben ser al menos 1")
+    private Integer diasAlertaVencimiento;
 }

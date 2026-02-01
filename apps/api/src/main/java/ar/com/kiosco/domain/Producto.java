@@ -60,6 +60,14 @@ public class Producto {
     @Builder.Default
     private Boolean activo = true;
 
+    @Column(name = "controla_vencimiento")
+    @Builder.Default
+    private Boolean controlaVencimiento = false;
+
+    @Column(name = "dias_alerta_vencimiento")
+    @Builder.Default
+    private Integer diasAlertaVencimiento = 7;
+
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, MetodosPagoHabilitados, Movimiento, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, QrInteroperableResponse, QrResponse, ValidacionCuit, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoCreate, QrInteroperableResponse, QrResponse, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -422,5 +422,61 @@ export const pagosApi = {
   obtenerQrEstatico: async (): Promise<QrInteroperableResponse> => {
     const response = await fetch(`${API_BASE}/pagos/qr/estatico`);
     return handleResponse<QrInteroperableResponse>(response);
+  },
+};
+
+// Lotes API
+export const lotesApi = {
+  listarPorProducto: async (productoId: string): Promise<Lote[]> => {
+    const response = await fetch(`${API_BASE}/productos/${productoId}/lotes`);
+    return handleResponse<Lote[]>(response);
+  },
+
+  obtener: async (id: string): Promise<Lote> => {
+    const response = await fetch(`${API_BASE}/lotes/${id}`);
+    return handleResponse<Lote>(response);
+  },
+
+  crear: async (productoId: string, data: LoteCreate): Promise<Lote> => {
+    const response = await fetch(`${API_BASE}/productos/${productoId}/lotes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Lote>(response);
+  },
+
+  actualizar: async (id: string, data: LoteCreate): Promise<Lote> => {
+    const response = await fetch(`${API_BASE}/lotes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Lote>(response);
+  },
+
+  eliminar: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/lotes/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
+  },
+};
+
+// Vencimientos API
+export const vencimientosApi = {
+  proximosAVencer: async (dias: number = 7): Promise<Lote[]> => {
+    const response = await fetch(`${API_BASE}/vencimientos/proximos?dias=${dias}`);
+    return handleResponse<Lote[]>(response);
+  },
+
+  vencidos: async (): Promise<Lote[]> => {
+    const response = await fetch(`${API_BASE}/vencimientos/vencidos`);
+    return handleResponse<Lote[]>(response);
+  },
+
+  resumen: async (): Promise<VencimientoResumen> => {
+    const response = await fetch(`${API_BASE}/vencimientos/resumen`);
+    return handleResponse<VencimientoResumen>(response);
   },
 };

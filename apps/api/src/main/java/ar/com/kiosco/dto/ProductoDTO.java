@@ -29,6 +29,8 @@ public class ProductoDTO {
     private Boolean stockBajo;
     private Boolean esFavorito;
     private Boolean activo;
+    private Boolean controlaVencimiento;
+    private Integer diasAlertaVencimiento;
 
     public static ProductoDTO fromEntity(Producto producto) {
         if (producto == null) return null;
@@ -64,6 +66,8 @@ public class ProductoDTO {
                 .stockBajo(stockBajo)
                 .esFavorito(producto.getEsFavorito())
                 .activo(producto.getActivo())
+                .controlaVencimiento(producto.getControlaVencimiento())
+                .diasAlertaVencimiento(producto.getDiasAlertaVencimiento())
                 .build();
     }
 }

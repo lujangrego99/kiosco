@@ -32,6 +32,8 @@ const productoSchema = z.object({
   stockActual: z.coerce.number().min(0).optional(),
   stockMinimo: z.coerce.number().min(0).optional(),
   esFavorito: z.boolean().optional(),
+  controlaVencimiento: z.boolean().optional(),
+  diasAlertaVencimiento: z.coerce.number().min(1).optional(),
 })
 
 type ProductoForm = z.infer<typeof productoSchema>
@@ -56,6 +58,8 @@ export default function NuevoProductoPage() {
       stockActual: 0,
       stockMinimo: 0,
       esFavorito: false,
+      controlaVencimiento: false,
+      diasAlertaVencimiento: 7,
     },
   })
 
@@ -198,6 +202,33 @@ export default function NuevoProductoPage() {
             className="h-4 w-4"
           />
           <Label htmlFor="esFavorito">Marcar como favorito</Label>
+        </div>
+
+        <div className="space-y-4 p-4 border rounded-lg bg-muted/50">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="controlaVencimiento"
+              {...register('controlaVencimiento')}
+              className="h-4 w-4"
+            />
+            <Label htmlFor="controlaVencimiento">Controla vencimiento</Label>
+          </div>
+          {watch('controlaVencimiento') && (
+            <div className="space-y-2">
+              <Label htmlFor="diasAlertaVencimiento">Dias de alerta antes del vencimiento</Label>
+              <Input
+                id="diasAlertaVencimiento"
+                type="number"
+                min="1"
+                {...register('diasAlertaVencimiento')}
+                className="w-32"
+              />
+              <p className="text-sm text-muted-foreground">
+                El stock se manejara por lotes y se descontara automaticamente del lote mas proximo a vencer (FEFO).
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-4 pt-4">

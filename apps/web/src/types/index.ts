@@ -29,6 +29,8 @@ export interface Producto {
   stockBajo: boolean;
   esFavorito: boolean;
   activo: boolean;
+  controlaVencimiento?: boolean;
+  diasAlertaVencimiento?: number;
 }
 
 export interface ProductoCreate {
@@ -42,6 +44,8 @@ export interface ProductoCreate {
   stockActual?: number;
   stockMinimo?: number;
   esFavorito?: boolean;
+  controlaVencimiento?: boolean;
+  diasAlertaVencimiento?: number;
 }
 
 export interface ApiError {
@@ -329,4 +333,36 @@ export interface PaymentStatus {
   statusDetail?: string;
   amount?: number;
   externalReference?: string;
+}
+
+// Lotes y Vencimientos types
+export type EstadoLote = 'OK' | 'PROXIMO' | 'VENCIDO';
+
+export interface Lote {
+  id: string;
+  productoId: string;
+  productoNombre: string;
+  codigoLote?: string;
+  cantidad: number;
+  cantidadDisponible: number;
+  fechaVencimiento: string;
+  fechaIngreso?: string;
+  costoUnitario?: number;
+  notas?: string;
+  diasParaVencer: number;
+  estado: EstadoLote;
+}
+
+export interface LoteCreate {
+  codigoLote?: string;
+  cantidad: number;
+  fechaVencimiento: string;
+  costoUnitario?: number;
+  notas?: string;
+}
+
+export interface VencimientoResumen {
+  proximosAVencer: number;
+  vencidos: number;
+  totalLotesActivos: number;
 }
