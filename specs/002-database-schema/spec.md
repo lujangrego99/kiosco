@@ -4,7 +4,7 @@
 
 ## Priority: 2
 
-## Status: INCOMPLETE
+## Status: COMPLETE
 
 ---
 
@@ -98,11 +98,11 @@ Crear `apps/api/src/main/resources/db/migration/V1__initial_schema.sql`
 
 ## Acceptance Criteria
 
-- [ ] Migration V1 ejecuta sin errores
-- [ ] Entidades Categoria y Producto creadas con JPA
-- [ ] Repositories funcionan (verificar con test)
-- [ ] `./gradlew test` pasa
-- [ ] La app inicia sin errores de schema
+- [x] Migration V1 ejecuta sin errores
+- [x] Entidades Categoria y Producto creadas con JPA
+- [x] Repositories funcionan (verificar con test)
+- [x] `./gradlew test` pasa
+- [x] La app inicia sin errores de schema
 
 ---
 
