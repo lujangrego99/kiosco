@@ -795,3 +795,136 @@ export interface TicketVentaResponse {
   ticketText?: string;
   ticketDataBase64?: string;
 }
+
+// Admin Panel types (Spec 019)
+export interface Plan {
+  id: string;
+  nombre: string;
+  descripcion?: string;
+  precioMensual?: number;
+  precioAnual?: number;
+  maxProductos?: number;
+  maxUsuarios?: number;
+  maxVentasMes?: number;
+  tieneFacturacion: boolean;
+  tieneReportesAvanzados: boolean;
+  tieneMultiKiosco: boolean;
+  activo: boolean;
+  createdAt: string;
+}
+
+export interface PlanCreate {
+  nombre: string;
+  descripcion?: string;
+  precioMensual?: number;
+  precioAnual?: number;
+  maxProductos?: number;
+  maxUsuarios?: number;
+  maxVentasMes?: number;
+  tieneFacturacion?: boolean;
+  tieneReportesAvanzados?: boolean;
+  tieneMultiKiosco?: boolean;
+}
+
+export type EstadoSuscripcion = 'ACTIVA' | 'CANCELADA' | 'VENCIDA' | 'TRIAL';
+export type PeriodoSuscripcion = 'MENSUAL' | 'ANUAL';
+
+export interface Suscripcion {
+  id: string;
+  kioscoId: string;
+  kioscoNombre: string;
+  planId: string;
+  planNombre: string;
+  estado: EstadoSuscripcion;
+  fechaInicio: string;
+  fechaFin?: string;
+  periodo?: PeriodoSuscripcion;
+  createdAt: string;
+}
+
+export interface SuscripcionCreate {
+  kioscoId: string;
+  planId: string;
+  fechaInicio: string;
+  fechaFin?: string;
+  periodo?: PeriodoSuscripcion;
+}
+
+export interface FeatureFlag {
+  id: string;
+  key: string;
+  nombre: string;
+  descripcion?: string;
+  habilitadoGlobal: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FeatureFlagCreate {
+  key: string;
+  nombre: string;
+  descripcion?: string;
+  habilitadoGlobal?: boolean;
+}
+
+export interface FeatureFlagKiosco {
+  id: string;
+  featureFlagId: string;
+  featureKey: string;
+  featureNombre: string;
+  kioscoId: string;
+  kioscoNombre: string;
+  habilitado: boolean;
+}
+
+export interface KioscoAdmin {
+  id: string;
+  nombre: string;
+  slug: string;
+  email?: string;
+  telefono?: string;
+  plan: string;
+  fechaRegistro: string;
+  ultimaActividad?: string;
+  ventasEsteMes?: number;
+  productosActivos?: number;
+  montoVentasMes?: number;
+  activo: boolean;
+  cadena?: string;
+  esCasaCentral?: boolean;
+}
+
+export interface UsoMensual {
+  id: string;
+  kioscoId: string;
+  kioscoNombre: string;
+  mes: string;
+  cantidadVentas: number;
+  cantidadProductos: number;
+  cantidadUsuarios: number;
+  montoTotalVentas: number;
+}
+
+export interface KioscoTop {
+  id: string;
+  nombre: string;
+  ventasMes: number;
+  cantidadVentas: number;
+}
+
+export interface PlanesResumen {
+  free: number;
+  basic: number;
+  pro: number;
+}
+
+export interface AdminDashboard {
+  totalKioscos: number;
+  kioscosActivos: number;
+  totalUsuarios: number;
+  mrrActual: number;
+  nuevosEsteMes: number;
+  bajasEsteMes: number;
+  topVentas: KioscoTop[];
+  planesResumen: PlanesResumen;
+}

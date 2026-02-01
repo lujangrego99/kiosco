@@ -932,3 +932,173 @@ export const impresoraApi = {
     return new Uint8Array(buffer);
   },
 };
+
+// Admin Panel API (Spec 019)
+import type { AdminDashboard, FeatureFlag, FeatureFlagCreate, FeatureFlagKiosco, KioscoAdmin, Plan, PlanCreate, Suscripcion, SuscripcionCreate, UsoMensual } from '@/types';
+
+export const adminApi = {
+  // Dashboard
+  getDashboard: async (): Promise<AdminDashboard> => {
+    const response = await fetch(`${API_BASE}/admin/dashboard`);
+    return handleResponse<AdminDashboard>(response);
+  },
+
+  // Kioscos
+  listarKioscos: async (params?: { plan?: string; activo?: boolean; busqueda?: string }): Promise<KioscoAdmin[]> => {
+    const searchParams = new URLSearchParams();
+    if (params?.plan) searchParams.append('plan', params.plan);
+    if (params?.activo !== undefined) searchParams.append('activo', String(params.activo));
+    if (params?.busqueda) searchParams.append('busqueda', params.busqueda);
+    const query = searchParams.toString();
+    const response = await fetch(`${API_BASE}/admin/kioscos${query ? `?${query}` : ''}`);
+    return handleResponse<KioscoAdmin[]>(response);
+  },
+
+  obtenerKiosco: async (id: string): Promise<KioscoAdmin> => {
+    const response = await fetch(`${API_BASE}/admin/kioscos/${id}`);
+    return handleResponse<KioscoAdmin>(response);
+  },
+
+  activarKiosco: async (id: string): Promise<KioscoAdmin> => {
+    const response = await fetch(`${API_BASE}/admin/kioscos/${id}/activar`, { method: 'PUT' });
+    return handleResponse<KioscoAdmin>(response);
+  },
+
+  desactivarKiosco: async (id: string): Promise<KioscoAdmin> => {
+    const response = await fetch(`${API_BASE}/admin/kioscos/${id}/desactivar`, { method: 'PUT' });
+    return handleResponse<KioscoAdmin>(response);
+  },
+
+  obtenerHistorialUso: async (kioscoId: string): Promise<UsoMensual[]> => {
+    const response = await fetch(`${API_BASE}/admin/kioscos/${kioscoId}/uso`);
+    return handleResponse<UsoMensual[]>(response);
+  },
+
+  cambiarPlanKiosco: async (kioscoId: string, planId: string): Promise<Suscripcion> => {
+    const response = await fetch(`${API_BASE}/admin/kioscos/${kioscoId}/plan?planId=${planId}`, { method: 'PUT' });
+    return handleResponse<Suscripcion>(response);
+  },
+
+  // Planes
+  listarPlanes: async (): Promise<Plan[]> => {
+    const response = await fetch(`${API_BASE}/admin/planes`);
+    return handleResponse<Plan[]>(response);
+  },
+
+  obtenerPlan: async (id: string): Promise<Plan> => {
+    const response = await fetch(`${API_BASE}/admin/planes/${id}`);
+    return handleResponse<Plan>(response);
+  },
+
+  crearPlan: async (data: PlanCreate): Promise<Plan> => {
+    const response = await fetch(`${API_BASE}/admin/planes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Plan>(response);
+  },
+
+  actualizarPlan: async (id: string, data: PlanCreate): Promise<Plan> => {
+    const response = await fetch(`${API_BASE}/admin/planes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Plan>(response);
+  },
+
+  activarPlan: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/admin/planes/${id}/activar`, { method: 'PUT' });
+    return handleResponse<void>(response);
+  },
+
+  desactivarPlan: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/admin/planes/${id}/desactivar`, { method: 'PUT' });
+    return handleResponse<void>(response);
+  },
+
+  // Suscripciones
+  listarSuscripciones: async (): Promise<Suscripcion[]> => {
+    const response = await fetch(`${API_BASE}/admin/suscripciones`);
+    return handleResponse<Suscripcion[]>(response);
+  },
+
+  listarSuscripcionesActivas: async (): Promise<Suscripcion[]> => {
+    const response = await fetch(`${API_BASE}/admin/suscripciones/activas`);
+    return handleResponse<Suscripcion[]>(response);
+  },
+
+  obtenerSuscripcion: async (id: string): Promise<Suscripcion> => {
+    const response = await fetch(`${API_BASE}/admin/suscripciones/${id}`);
+    return handleResponse<Suscripcion>(response);
+  },
+
+  crearSuscripcion: async (data: SuscripcionCreate): Promise<Suscripcion> => {
+    const response = await fetch(`${API_BASE}/admin/suscripciones`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Suscripcion>(response);
+  },
+
+  cancelarSuscripcion: async (id: string): Promise<Suscripcion> => {
+    const response = await fetch(`${API_BASE}/admin/suscripciones/${id}/cancelar`, { method: 'PUT' });
+    return handleResponse<Suscripcion>(response);
+  },
+
+  // Feature Flags
+  listarFeatures: async (): Promise<FeatureFlag[]> => {
+    const response = await fetch(`${API_BASE}/admin/features`);
+    return handleResponse<FeatureFlag[]>(response);
+  },
+
+  obtenerFeature: async (id: string): Promise<FeatureFlag> => {
+    const response = await fetch(`${API_BASE}/admin/features/${id}`);
+    return handleResponse<FeatureFlag>(response);
+  },
+
+  crearFeature: async (data: FeatureFlagCreate): Promise<FeatureFlag> => {
+    const response = await fetch(`${API_BASE}/admin/features`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<FeatureFlag>(response);
+  },
+
+  actualizarFeature: async (id: string, data: FeatureFlagCreate): Promise<FeatureFlag> => {
+    const response = await fetch(`${API_BASE}/admin/features/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<FeatureFlag>(response);
+  },
+
+  toggleFeature: async (key: string, enabled: boolean): Promise<FeatureFlag> => {
+    const response = await fetch(`${API_BASE}/admin/features/${key}/toggle?enabled=${enabled}`, { method: 'PUT' });
+    return handleResponse<FeatureFlag>(response);
+  },
+
+  setFeatureForKiosco: async (key: string, kioscoId: string, enabled: boolean): Promise<FeatureFlagKiosco> => {
+    const response = await fetch(`${API_BASE}/admin/features/${key}/kiosco/${kioscoId}?enabled=${enabled}`, { method: 'PUT' });
+    return handleResponse<FeatureFlagKiosco>(response);
+  },
+
+  removeFeatureOverride: async (key: string, kioscoId: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/admin/features/${key}/kiosco/${kioscoId}`, { method: 'DELETE' });
+    return handleResponse<void>(response);
+  },
+
+  listarOverrides: async (featureFlagId: string): Promise<FeatureFlagKiosco[]> => {
+    const response = await fetch(`${API_BASE}/admin/features/${featureFlagId}/overrides`);
+    return handleResponse<FeatureFlagKiosco[]>(response);
+  },
+
+  eliminarFeature: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/admin/features/${id}`, { method: 'DELETE' });
+    return handleResponse<void>(response);
+  },
+};
