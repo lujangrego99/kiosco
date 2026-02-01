@@ -4,6 +4,8 @@ import ar.com.kiosco.domain.Kiosco;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -26,7 +30,7 @@ import java.util.UUID;
 @Slf4j
 public class TenantSchemaManager {
 
-    private static final String TENANT_TEMPLATE_PATH = "db/tenant/V1__tenant_tables.sql";
+    private static final String TENANT_MIGRATIONS_PATH = "db/tenant/";
     private static final String SCHEMA_PREFIX = "kiosco_";
 
     private final JdbcTemplate jdbcTemplate;
@@ -96,8 +100,22 @@ public class TenantSchemaManager {
 
     private void executeTenantTemplate(String schemaName) {
         try {
-            ClassPathResource resource = new ClassPathResource(TENANT_TEMPLATE_PATH);
-            String sql = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+            // Find all tenant migration files and sort them by version
+            PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            Resource[] resources = resolver.getResources("classpath:" + TENANT_MIGRATIONS_PATH + "V*.sql");
+
+            // Sort by version number (V1, V2, etc.)
+            Arrays.sort(resources, Comparator.comparing(r -> {
+                String filename = r.getFilename();
+                if (filename != null && filename.startsWith("V")) {
+                    try {
+                        return Integer.parseInt(filename.split("__")[0].substring(1));
+                    } catch (NumberFormatException e) {
+                        return Integer.MAX_VALUE;
+                    }
+                }
+                return Integer.MAX_VALUE;
+            }));
 
             // Get connection and execute SQL with search_path set to tenant schema
             Connection connection = Objects.requireNonNull(jdbcTemplate.getDataSource()).getConnection();
@@ -105,11 +123,17 @@ public class TenantSchemaManager {
                 // Set search_path to the tenant schema
                 stmt.execute("SET search_path TO " + schemaName);
 
-                // Execute each statement from the template
-                for (String statement : sql.split(";")) {
-                    String trimmed = statement.trim();
-                    if (!trimmed.isEmpty() && !trimmed.startsWith("--")) {
-                        stmt.execute(trimmed);
+                // Execute each migration file
+                for (Resource resource : resources) {
+                    log.info("Executing tenant migration: {} in schema: {}", resource.getFilename(), schemaName);
+                    String sql = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
+
+                    // Execute each statement from the migration
+                    for (String statement : sql.split(";")) {
+                        String trimmed = statement.trim();
+                        if (!trimmed.isEmpty() && !trimmed.startsWith("--")) {
+                            stmt.execute(trimmed);
+                        }
                     }
                 }
 
@@ -119,11 +143,11 @@ public class TenantSchemaManager {
                 connection.close();
             }
 
-            log.info("Executed tenant template in schema: {}", schemaName);
+            log.info("Executed all tenant migrations in schema: {}", schemaName);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to read tenant template: " + TENANT_TEMPLATE_PATH, e);
+            throw new RuntimeException("Failed to read tenant migrations from: " + TENANT_MIGRATIONS_PATH, e);
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to execute tenant template in schema: " + schemaName, e);
+            throw new RuntimeException("Failed to execute tenant migrations in schema: " + schemaName, e);
         }
     }
 }

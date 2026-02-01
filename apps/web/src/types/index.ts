@@ -155,3 +155,60 @@ export interface Pago {
   medioPago?: string;
   descripcion?: string;
 }
+
+// Configuración Fiscal types
+export type CondicionIva = 'RESPONSABLE_INSCRIPTO' | 'MONOTRIBUTO' | 'EXENTO' | 'CONSUMIDOR_FINAL';
+export type AmbienteAfip = 'TESTING' | 'PRODUCTION';
+export type EstadoFiscal = 'SIN_CONFIGURAR' | 'CERTIFICADO_VENCIDO' | 'CERTIFICADO_POR_VENCER' | 'CONFIGURADO';
+
+export interface ConfigFiscal {
+  id: string;
+  cuit: string;
+  razonSocial: string;
+  condicionIva: CondicionIva;
+  condicionIvaDescripcion: string;
+  domicilioFiscal: string;
+  inicioActividades?: string;
+  puntoVenta: number;
+  ambiente: AmbienteAfip;
+  certificadoVencimiento?: string;
+  certificadoConfigurado: boolean;
+  certificadoVencido: boolean;
+  certificadoPorVencer: boolean;
+  estado: EstadoFiscal;
+}
+
+export interface ConfigFiscalCreate {
+  cuit: string;
+  razonSocial: string;
+  condicionIva: CondicionIva;
+  domicilioFiscal: string;
+  inicioActividades?: string;
+  puntoVenta: number;
+  ambiente?: AmbienteAfip;
+}
+
+export interface VerificacionCertificado {
+  valido: boolean;
+  mensaje: string;
+  vencimiento?: string;
+  info?: {
+    subject: string;
+    issuer: string;
+    validFrom: string;
+    validTo: string;
+    serialNumber: string;
+  };
+}
+
+export interface VerificacionAfip {
+  conectado: boolean;
+  estado: string;
+  mensaje: string;
+}
+
+export interface ValidacionCuit {
+  valido: boolean;
+  cuitFormateado: string;
+  mensaje: string;
+}

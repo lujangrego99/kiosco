@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, CuentaCorriente, Movimiento, Pago, Producto, ProductoCreate, Venta, VentaCreate } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, ConfigFiscal, ConfigFiscalCreate, CuentaCorriente, Movimiento, Pago, Producto, ProductoCreate, ValidacionCuit, Venta, VentaCreate, VerificacionAfip, VerificacionCertificado } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -225,5 +225,52 @@ export const cuentaCorrienteApi = {
   verificarPuedeFiar: async (clienteId: string, monto: number): Promise<{ puede: boolean; saldoActual: number; limiteCredito: number; disponible: number }> => {
     const response = await fetch(`${API_BASE}/clientes/${clienteId}/puede-fiar?monto=${monto}`);
     return handleResponse<{ puede: boolean; saldoActual: number; limiteCredito: number; disponible: number }>(response);
+  },
+};
+
+// Configuración Fiscal API
+export const configFiscalApi = {
+  obtener: async (): Promise<ConfigFiscal | null> => {
+    const response = await fetch(`${API_BASE}/config/fiscal`);
+    if (response.status === 204) {
+      return null;
+    }
+    return handleResponse<ConfigFiscal>(response);
+  },
+
+  guardar: async (data: ConfigFiscalCreate): Promise<ConfigFiscal> => {
+    const response = await fetch(`${API_BASE}/config/fiscal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ConfigFiscal>(response);
+  },
+
+  subirCertificado: async (crt: File, key: File): Promise<ConfigFiscal> => {
+    const formData = new FormData();
+    formData.append('crt', crt);
+    formData.append('key', key);
+
+    const response = await fetch(`${API_BASE}/config/fiscal/certificado`, {
+      method: 'POST',
+      body: formData,
+    });
+    return handleResponse<ConfigFiscal>(response);
+  },
+
+  verificarCertificado: async (): Promise<VerificacionCertificado> => {
+    const response = await fetch(`${API_BASE}/config/fiscal/certificado/verificar`);
+    return handleResponse<VerificacionCertificado>(response);
+  },
+
+  verificarConexionAfip: async (): Promise<VerificacionAfip> => {
+    const response = await fetch(`${API_BASE}/config/fiscal/verificar`);
+    return handleResponse<VerificacionAfip>(response);
+  },
+
+  validarCuit: async (cuit: string): Promise<ValidacionCuit> => {
+    const response = await fetch(`${API_BASE}/config/fiscal/validar-cuit?cuit=${encodeURIComponent(cuit)}`);
+    return handleResponse<ValidacionCuit>(response);
   },
 };
