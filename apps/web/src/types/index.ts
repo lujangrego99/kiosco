@@ -97,3 +97,28 @@ export interface CartItem {
   producto: Producto;
   cantidad: number;
 }
+
+// Cliente types
+export type TipoDocumento = 'DNI' | 'CUIT' | 'OTRO';
+
+export interface Cliente {
+  id: string;
+  nombre: string;
+  documento?: string;
+  tipoDocumento?: TipoDocumento;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  notas?: string;
+  activo: boolean;
+}
+
+export interface ClienteCreate {
+  nombre: string;
+  documento?: string;
+  tipoDocumento?: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  notas?: string;
+}

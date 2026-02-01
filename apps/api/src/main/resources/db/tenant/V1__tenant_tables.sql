@@ -82,5 +82,24 @@ CREATE INDEX idx_ventas_numero ON ventas(numero);
 CREATE INDEX idx_venta_items_venta ON venta_items(venta_id);
 CREATE INDEX idx_venta_items_producto ON venta_items(producto_id);
 
+-- Clientes
+CREATE TABLE clientes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    nombre VARCHAR(200) NOT NULL,
+    documento VARCHAR(20),
+    tipo_documento VARCHAR(10),
+    telefono VARCHAR(50),
+    email VARCHAR(200),
+    direccion TEXT,
+    notas TEXT,
+    activo BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_clientes_documento ON clientes(documento);
+CREATE INDEX idx_clientes_nombre ON clientes(nombre);
+CREATE INDEX idx_clientes_activo ON clientes(activo) WHERE activo = true;
+
 -- Secuencia para numeros de venta
 CREATE SEQUENCE IF NOT EXISTS ventas_numero_seq START WITH 1 INCREMENT BY 1;

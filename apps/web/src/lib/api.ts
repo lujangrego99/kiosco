@@ -1,4 +1,4 @@
-import type { Categoria, CategoriaCreate, Producto, ProductoCreate, Venta, VentaCreate } from '@/types';
+import type { Categoria, CategoriaCreate, Cliente, ClienteCreate, Producto, ProductoCreate, Venta, VentaCreate } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -150,5 +150,48 @@ export const ventasApi = {
   obtenerProximoNumero: async (): Promise<{ proximoNumero: number }> => {
     const response = await fetch(`${API_BASE}/ventas/ultimo-numero`);
     return handleResponse<{ proximoNumero: number }>(response);
+  },
+};
+
+// Clientes API
+export const clientesApi = {
+  listar: async (): Promise<Cliente[]> => {
+    const response = await fetch(`${API_BASE}/clientes`);
+    return handleResponse<Cliente[]>(response);
+  },
+
+  obtener: async (id: string): Promise<Cliente> => {
+    const response = await fetch(`${API_BASE}/clientes/${id}`);
+    return handleResponse<Cliente>(response);
+  },
+
+  buscar: async (query: string): Promise<Cliente[]> => {
+    const response = await fetch(`${API_BASE}/clientes/buscar?q=${encodeURIComponent(query)}`);
+    return handleResponse<Cliente[]>(response);
+  },
+
+  crear: async (data: ClienteCreate): Promise<Cliente> => {
+    const response = await fetch(`${API_BASE}/clientes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Cliente>(response);
+  },
+
+  actualizar: async (id: string, data: ClienteCreate): Promise<Cliente> => {
+    const response = await fetch(`${API_BASE}/clientes/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<Cliente>(response);
+  },
+
+  eliminar: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE}/clientes/${id}`, {
+      method: 'DELETE',
+    });
+    return handleResponse<void>(response);
   },
 };
