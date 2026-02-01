@@ -5,6 +5,7 @@ import { SearchBar } from '@/components/pos/SearchBar';
 import { ProductGrid } from '@/components/pos/ProductGrid';
 import { Cart } from '@/components/pos/Cart';
 import { PaymentModal } from '@/components/pos/PaymentModal';
+import { OfflineIndicator } from '@/components/pos/OfflineIndicator';
 import { useToast } from '@/hooks/use-toast';
 import { useCartStore } from '@/stores/cart-store';
 
@@ -47,10 +48,13 @@ export default function POSPage() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header with search */}
+      {/* Header with search and offline indicator */}
       <header className="flex-shrink-0 p-4 border-b">
-        <div className="max-w-2xl">
-          <SearchBar onSearch={setSearchQuery} />
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex-1 max-w-2xl">
+            <SearchBar onSearch={setSearchQuery} />
+          </div>
+          <OfflineIndicator />
         </div>
       </header>
 

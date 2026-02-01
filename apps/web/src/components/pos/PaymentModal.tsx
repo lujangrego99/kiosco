@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCartStore } from '@/stores/cart-store';
-import { ventasApi } from '@/lib/api';
+import { syncService } from '@/lib/sync';
+import { getNextVentaNumero, setNextVentaNumero } from '@/lib/db';
 import type { MedioPago } from '@/types';
 import { Loader2, Banknote, CreditCard, Building2 } from 'lucide-react';
 
@@ -26,6 +27,10 @@ const mediosPago: { value: MedioPago; label: string; icon: React.ReactNode }[] =
   { value: 'MERCADOPAGO', label: 'Mercado Pago', icon: <CreditCard className="h-6 w-6" /> },
   { value: 'TRANSFERENCIA', label: 'Transferencia', icon: <Building2 className="h-6 w-6" /> },
 ];
+
+function generateId(): string {
+  return `offline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
 
 export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
   const [medioPago, setMedioPago] = useState<MedioPago>('EFECTIVO');
@@ -60,14 +65,38 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
     setError(null);
 
     try {
-      await ventasApi.crear({
+      // Get next venta number
+      const numero = await getNextVentaNumero();
+
+      // Calculate totals
+      const subtotal = items.reduce(
+        (sum, item) => sum + item.producto.precioVenta * item.cantidad,
+        0
+      );
+
+      // Save venta locally (works offline)
+      await syncService.saveVentaLocally({
+        id: generateId(),
+        numero,
         items: items.map((item) => ({
           productoId: item.producto.id,
+          productoNombre: item.producto.nombre,
+          productoCodigo: item.producto.codigo,
           cantidad: item.cantidad,
+          precioUnitario: item.producto.precioVenta,
+          subtotal: item.producto.precioVenta * item.cantidad,
         })),
+        subtotal,
+        descuento: 0,
+        total,
         medioPago,
         montoRecibido: medioPago === 'EFECTIVO' ? parseFloat(montoRecibido) : undefined,
+        vuelto: medioPago === 'EFECTIVO' ? vuelto : undefined,
+        fecha: Date.now(),
       });
+
+      // Increment local venta number
+      await setNextVentaNumero(numero + 1);
 
       clear();
       onSuccess();

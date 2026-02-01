@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { ProductCard } from './ProductCard';
-import { productosApi, categoriasApi } from '@/lib/api';
-import type { Producto, Categoria } from '@/types';
+import { useOfflineProducts } from '@/hooks/useOfflineProducts';
+import type { Producto } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Star, Loader2 } from 'lucide-react';
 
@@ -12,51 +12,14 @@ interface ProductGridProps {
 }
 
 export function ProductGrid({ searchQuery }: ProductGridProps) {
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [selectedCategoria, setSelectedCategoria] = useState<string | null>(null);
   const [showFavoritos, setShowFavoritos] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadCategorias = async () => {
-      try {
-        const cats = await categoriasApi.listar();
-        setCategorias(cats.filter((c) => c.activo));
-      } catch (error) {
-        console.error('Error loading categories:', error);
-      }
-    };
-    loadCategorias();
-  }, []);
-
-  useEffect(() => {
-    const loadProductos = async () => {
-      setLoading(true);
-      try {
-        let prods: Producto[];
-
-        if (searchQuery) {
-          prods = await productosApi.buscar(searchQuery);
-        } else if (showFavoritos) {
-          prods = await productosApi.favoritos();
-        } else if (selectedCategoria) {
-          prods = await productosApi.listar(selectedCategoria);
-        } else {
-          prods = await productosApi.listar();
-        }
-
-        setProductos(prods);
-      } catch (error) {
-        console.error('Error loading products:', error);
-        setProductos([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProductos();
-  }, [searchQuery, selectedCategoria, showFavoritos]);
+  const { productos, categorias, loading } = useOfflineProducts({
+    searchQuery,
+    categoriaId: selectedCategoria,
+    favoritosOnly: showFavoritos,
+  });
 
   const handleCategoriaClick = (categoriaId: string | null) => {
     setShowFavoritos(false);
@@ -68,12 +31,33 @@ export function ProductGrid({ searchQuery }: ProductGridProps) {
     setShowFavoritos(!showFavoritos);
   };
 
-  // Sort: favorites first
-  const sortedProductos = [...productos].sort((a, b) => {
-    if (a.esFavorito && !b.esFavorito) return -1;
-    if (!a.esFavorito && b.esFavorito) return 1;
-    return 0;
-  });
+  // Convert OfflineProducto to Producto for ProductCard compatibility
+  const productosAsProducto: Producto[] = useMemo(() => {
+    return productos.map((p) => ({
+      id: p.id,
+      codigo: p.codigo,
+      codigoBarras: p.codigoBarras,
+      nombre: p.nombre,
+      descripcion: p.descripcion,
+      categoria: p.categoriaId
+        ? {
+            id: p.categoriaId,
+            nombre: p.categoriaNombre || '',
+            color: p.categoriaColor,
+            orden: 0,
+            activo: true,
+          }
+        : undefined,
+      precioCosto: p.precioCosto,
+      precioVenta: p.precioVenta,
+      margen: p.precioCosto > 0 ? ((p.precioVenta - p.precioCosto) / p.precioCosto) * 100 : 0,
+      stockActual: p.stockActual,
+      stockMinimo: p.stockMinimo,
+      stockBajo: p.stockActual <= p.stockMinimo,
+      esFavorito: p.esFavorito,
+      activo: p.activo,
+    }));
+  }, [productos]);
 
   return (
     <div className="flex flex-col h-full">
@@ -122,13 +106,13 @@ export function ProductGrid({ searchQuery }: ProductGridProps) {
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
-        ) : sortedProductos.length === 0 ? (
+        ) : productosAsProducto.length === 0 ? (
           <div className="flex items-center justify-center h-40 text-muted-foreground">
             No se encontraron productos
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-            {sortedProductos.map((producto) => (
+            {productosAsProducto.map((producto) => (
               <ProductCard key={producto.id} producto={producto} />
             ))}
           </div>
