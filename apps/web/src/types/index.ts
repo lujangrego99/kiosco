@@ -745,3 +745,53 @@ export interface StockConsolidado {
   stockTotal: number;
   stockPorKiosco: StockPorKiosco[];
 }
+
+// Impresora (Printer) types
+export type TipoConexionImpresora = 'NINGUNA' | 'USB' | 'BLUETOOTH' | 'RED';
+
+export interface ConfigImpresora {
+  id?: string;
+  tipo: TipoConexionImpresora;
+  nombre?: string;
+  direccion?: string;
+  puerto?: number;
+  anchoPapel: number;
+  activa: boolean;
+  imprimirAutomatico: boolean;
+  nombreNegocio?: string;
+  direccionNegocio?: string;
+  telefonoNegocio?: string;
+  mensajePie?: string;
+  mostrarLogo: boolean;
+  configurada: boolean;
+}
+
+export interface ConfigImpresoraCreate {
+  tipo?: TipoConexionImpresora;
+  nombre?: string;
+  direccion?: string;
+  puerto?: number;
+  anchoPapel?: number;
+  activa?: boolean;
+  imprimirAutomatico?: boolean;
+  nombreNegocio?: string;
+  direccionNegocio?: string;
+  telefonoNegocio?: string;
+  mensajePie?: string;
+  mostrarLogo?: boolean;
+}
+
+export interface TicketPruebaResponse {
+  success: boolean;
+  message: string;
+  ticketText?: string;
+  ticketDataBase64?: string;
+}
+
+export interface TicketVentaResponse {
+  success: boolean;
+  message: string;
+  ventaId?: string;
+  ticketText?: string;
+  ticketDataBase64?: string;
+}

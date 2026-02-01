@@ -1,4 +1,4 @@
-import type { AgregarKioscoACadena, Cadena, CadenaCreate, CadenaMember, CadenaMemberCreate, Categoria, CategoriaCreate, Cliente, ClienteCreate, Comparativo, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Insight, KioscoResumen, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoAbc, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, ProyeccionVentas, QrInteroperableResponse, QrResponse, RankingKiosco, RecepcionOrden, RentabilidadCategoria, RentabilidadProducto, ReporteConsolidado, ResumenCaja, ResumenDashboard, StockConsolidado, SugerenciaCompra, Tendencia, TendenciaProducto, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
+import type { AgregarKioscoACadena, Cadena, CadenaCreate, CadenaMember, CadenaMemberCreate, Categoria, CategoriaCreate, Cliente, ClienteCreate, Comparativo, Comprobante, ConfigFiscal, ConfigFiscalCreate, ConfigImpresora, ConfigImpresoraCreate, ConfigPagos, ConfigPagosCreate, CuentaCorriente, EmitirFactura, GenerarOrdenDesdeSugerencias, HistorialPrecio, Insight, KioscoResumen, Lote, LoteCreate, MetodosPagoHabilitados, Movimiento, OrdenCompra, OrdenCompraCreate, Pago, PaymentStatus, PreferenciaResponse, Producto, ProductoAbc, ProductoCreate, ProductoMasVendido, ProductoProveedor, ProductoProveedorCreate, ProductoSinMovimiento, Proveedor, ProveedorCreate, ProyeccionVentas, QrInteroperableResponse, QrResponse, RankingKiosco, RecepcionOrden, RentabilidadCategoria, RentabilidadProducto, ReporteConsolidado, ResumenCaja, ResumenDashboard, StockConsolidado, SugerenciaCompra, Tendencia, TendenciaProducto, TicketPruebaResponse, TicketVentaResponse, ValidacionCuit, VencimientoResumen, Venta, VentaCreate, VentaDiaria, VentaPorHora, VentaRango, VerificacionAfip, VerificacionCertificado, VerificacionMp } from '@/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -877,5 +877,58 @@ export const cadenasApi = {
       method: 'DELETE',
     });
     return handleResponse<void>(response);
+  },
+};
+
+// Impresora (Printer) API
+export const impresoraApi = {
+  obtenerConfig: async (): Promise<ConfigImpresora> => {
+    const response = await fetch(`${API_BASE}/config/impresora`);
+    return handleResponse<ConfigImpresora>(response);
+  },
+
+  guardarConfig: async (data: ConfigImpresoraCreate): Promise<ConfigImpresora> => {
+    const response = await fetch(`${API_BASE}/config/impresora`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return handleResponse<ConfigImpresora>(response);
+  },
+
+  imprimirPrueba: async (): Promise<TicketPruebaResponse> => {
+    const response = await fetch(`${API_BASE}/impresora/test`, {
+      method: 'POST',
+    });
+    return handleResponse<TicketPruebaResponse>(response);
+  },
+
+  imprimirVenta: async (ventaId: string): Promise<TicketVentaResponse> => {
+    const response = await fetch(`${API_BASE}/impresora/imprimir/venta/${ventaId}`, {
+      method: 'POST',
+    });
+    return handleResponse<TicketVentaResponse>(response);
+  },
+
+  obtenerTicketTexto: async (ventaId: string): Promise<{ ventaId: string; ticketText: string }> => {
+    const response = await fetch(`${API_BASE}/tickets/venta/${ventaId}`);
+    return handleResponse<{ ventaId: string; ticketText: string }>(response);
+  },
+
+  obtenerTicketPdf: async (ventaId: string): Promise<Blob> => {
+    const response = await fetch(`${API_BASE}/tickets/venta/${ventaId}/pdf`);
+    if (!response.ok) {
+      throw new Error('Error generando PDF del ticket');
+    }
+    return response.blob();
+  },
+
+  obtenerTicketEscPos: async (ventaId: string): Promise<Uint8Array> => {
+    const response = await fetch(`${API_BASE}/tickets/venta/${ventaId}/escpos`);
+    if (!response.ok) {
+      throw new Error('Error generando ticket ESC/POS');
+    }
+    const buffer = await response.arrayBuffer();
+    return new Uint8Array(buffer);
   },
 };
