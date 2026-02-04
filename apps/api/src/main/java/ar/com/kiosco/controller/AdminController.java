@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -24,6 +25,7 @@ public class AdminController {
     private final PlanService planService;
     private final SuscripcionService suscripcionService;
     private final FeatureFlagService featureFlagService;
+    private final TenantMigrationService tenantMigrationService;
 
     /**
      * Check if current user has superadmin access.
@@ -226,5 +228,34 @@ public class AdminController {
         requireSuperadmin();
         featureFlagService.eliminar(id);
         return ResponseEntity.noContent().build();
+    }
+
+    // ========== Tenant Migrations ==========
+
+    /**
+     * Run pending migrations on all tenant schemas.
+     */
+    @PostMapping("/migrations/run")
+    public ResponseEntity<MigrationReportDTO> runMigrations() {
+        requireSuperadmin();
+        return ResponseEntity.ok(tenantMigrationService.migrateAllTenants());
+    }
+
+    /**
+     * Get summary of pending migrations without executing them.
+     */
+    @GetMapping("/migrations/status")
+    public ResponseEntity<Map<String, Object>> getMigrationStatus() {
+        requireSuperadmin();
+        return ResponseEntity.ok(tenantMigrationService.getPendingMigrationsSummary());
+    }
+
+    /**
+     * Run migrations on a specific tenant schema.
+     */
+    @PostMapping("/migrations/tenant/{schema}")
+    public ResponseEntity<MigrationReportDTO.TenantMigrationResult> migrateTenant(@PathVariable String schema) {
+        requireSuperadmin();
+        return ResponseEntity.ok(tenantMigrationService.migrateTenant(schema));
     }
 }

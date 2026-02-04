@@ -4,7 +4,7 @@
 
 ## Priority: 3
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -152,12 +152,12 @@ java -jar api.jar --migrate-tenants
 
 ## Acceptance Criteria
 
-- [ ] Tabla `schema_version` creada en cada tenant
-- [ ] `TenantMigrationService.listTenantSchemas()` lista todos los schemas kiosco_*
-- [ ] `migrateTenant(schema)` aplica migraciones pendientes
-- [ ] `migrateAllTenants()` procesa todos los tenants con reporte
-- [ ] `POST /api/admin/migrations/run` ejecuta migracion (solo superadmin)
-- [ ] Al crear nuevo tenant, se inicializa con version actual
+- [x] Tabla `schema_version` creada en cada tenant
+- [x] `TenantMigrationService.listTenantSchemas()` lista todos los schemas kiosco_*
+- [x] `migrateTenant(schema)` aplica migraciones pendientes
+- [x] `migrateAllTenants()` procesa todos los tenants con reporte
+- [x] `POST /api/admin/migrations/run` ejecuta migracion (solo superadmin)
+- [x] Al crear nuevo tenant, se inicializa con version actual
 - [ ] Test: crear tenant, agregar migracion V25, ejecutar migrate, verificar tabla existe
 
 ---
