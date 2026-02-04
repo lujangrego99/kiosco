@@ -1,5 +1,6 @@
 package ar.com.kiosco.service;
 
+import ar.com.kiosco.domain.AuditLog;
 import ar.com.kiosco.domain.Categoria;
 import ar.com.kiosco.domain.Producto;
 import ar.com.kiosco.dto.ProductoCreateDTO;
@@ -9,6 +10,7 @@ import ar.com.kiosco.repository.ProductoRepository;
 import ar.com.kiosco.security.KioscoContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,6 +30,7 @@ public class ProductoService {
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
     private final PlanLimitService planLimitService;
+    private final AuditService auditService;
 
     /**
      * Get current kiosco ID for cache key prefix.
@@ -132,6 +135,10 @@ public class ProductoService {
                 .build();
 
         producto = productoRepository.save(producto);
+
+        // Audit log
+        auditService.logCreate(AuditLog.EntityType.PRODUCTO.name(), producto.getId(), ProductoDTO.fromEntity(producto));
+
         return ProductoDTO.fromEntity(producto);
     }
 
@@ -140,6 +147,9 @@ public class ProductoService {
     public ProductoDTO actualizar(UUID id, ProductoCreateDTO dto) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
+
+        // Capture before state for audit
+        ProductoDTO beforeState = ProductoDTO.fromEntity(producto);
 
         Categoria categoria = null;
         if (dto.getCategoriaId() != null) {
@@ -173,7 +183,12 @@ public class ProductoService {
         }
 
         producto = productoRepository.save(producto);
-        return ProductoDTO.fromEntity(producto);
+
+        // Audit log
+        ProductoDTO afterState = ProductoDTO.fromEntity(producto);
+        auditService.logUpdate(AuditLog.EntityType.PRODUCTO.name(), producto.getId(), beforeState, afterState);
+
+        return afterState;
     }
 
     @Transactional
@@ -181,6 +196,9 @@ public class ProductoService {
     public void eliminar(UUID id) {
         Producto producto = productoRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Producto no encontrado: " + id));
+
+        // Audit log before soft-delete
+        auditService.logDelete(AuditLog.EntityType.PRODUCTO.name(), producto.getId(), ProductoDTO.fromEntity(producto));
 
         producto.setActivo(false);
         productoRepository.save(producto);

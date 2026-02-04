@@ -1,5 +1,6 @@
 package ar.com.kiosco.service;
 
+import ar.com.kiosco.domain.AuditLog;
 import ar.com.kiosco.domain.Cliente;
 import ar.com.kiosco.domain.Producto;
 import ar.com.kiosco.domain.Venta;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,7 @@ public class VentaService {
     private final CuentaCorrienteService cuentaCorrienteService;
     private final LoteService loteService;
     private final PlanLimitService planLimitService;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public VentaDTO obtenerPorId(UUID id) {
@@ -171,6 +174,9 @@ public class VentaService {
             );
         }
 
+        // Audit log
+        auditService.logCreate(AuditLog.EntityType.VENTA.name(), venta.getId(), VentaDTO.fromEntity(venta));
+
         return VentaDTO.fromEntity(venta);
     }
 
@@ -208,6 +214,19 @@ public class VentaService {
 
         venta.setEstado(Venta.EstadoVenta.ANULADA);
         venta = ventaRepository.save(venta);
+
+        // Audit log for anulacion
+        auditService.logAction(
+                AuditLog.EntityType.VENTA.name(),
+                venta.getId(),
+                AuditLog.Action.ANULAR.name(),
+                Map.of(
+                        "numero", venta.getNumero(),
+                        "total", venta.getTotal(),
+                        "motivo", "Anulacion de venta"
+                )
+        );
+
         return VentaDTO.fromEntity(venta);
     }
 }

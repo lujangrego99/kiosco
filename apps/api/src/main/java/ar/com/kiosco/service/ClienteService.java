@@ -1,5 +1,6 @@
 package ar.com.kiosco.service;
 
+import ar.com.kiosco.domain.AuditLog;
 import ar.com.kiosco.domain.Cliente;
 import ar.com.kiosco.dto.ClienteCreateDTO;
 import ar.com.kiosco.dto.ClienteDTO;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 public class ClienteService {
 
     private final ClienteRepository clienteRepository;
+    private final AuditService auditService;
 
     @Transactional(readOnly = true)
     public List<ClienteDTO> listarActivos() {
@@ -64,6 +66,10 @@ public class ClienteService {
                 .build();
 
         cliente = clienteRepository.save(cliente);
+
+        // Audit log
+        auditService.logCreate(AuditLog.EntityType.CLIENTE.name(), cliente.getId(), ClienteDTO.fromEntity(cliente));
+
         return ClienteDTO.fromEntity(cliente);
     }
 
@@ -71,6 +77,9 @@ public class ClienteService {
     public ClienteDTO actualizar(UUID id, ClienteCreateDTO dto) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado: " + id));
+
+        // Capture before state for audit
+        ClienteDTO beforeState = ClienteDTO.fromEntity(cliente);
 
         cliente.setNombre(dto.getNombre());
         cliente.setDocumento(dto.getDocumento());
@@ -81,13 +90,21 @@ public class ClienteService {
         cliente.setNotas(dto.getNotas());
 
         cliente = clienteRepository.save(cliente);
-        return ClienteDTO.fromEntity(cliente);
+
+        // Audit log
+        ClienteDTO afterState = ClienteDTO.fromEntity(cliente);
+        auditService.logUpdate(AuditLog.EntityType.CLIENTE.name(), cliente.getId(), beforeState, afterState);
+
+        return afterState;
     }
 
     @Transactional
     public void eliminar(UUID id) {
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Cliente no encontrado: " + id));
+
+        // Audit log before soft-delete
+        auditService.logDelete(AuditLog.EntityType.CLIENTE.name(), cliente.getId(), ClienteDTO.fromEntity(cliente));
 
         cliente.setActivo(false);
         clienteRepository.save(cliente);

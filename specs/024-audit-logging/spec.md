@@ -4,7 +4,7 @@
 
 ## Priority: 5
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -132,15 +132,15 @@ GET /api/audit/producto/{id}   // Historial de un producto
 
 ## Acceptance Criteria
 
-- [ ] Tabla `audit_log` creada en cada tenant
-- [ ] `AuditService` con metodos logCreate/Update/Delete
-- [ ] ProductoService registra cambios en audit
-- [ ] VentaService registra creacion y anulacion
-- [ ] ClienteService registra CRUD
-- [ ] ConfigFiscal registra cambios
-- [ ] `GET /api/audit` permite consultar historial
-- [ ] Audit incluye IP y user-agent
-- [ ] Test: modificar producto, verificar audit log creado
+- [x] Tabla `audit_log` creada en cada tenant
+- [x] `AuditService` con metodos logCreate/Update/Delete
+- [x] ProductoService registra cambios en audit
+- [x] VentaService registra creacion y anulacion
+- [x] ClienteService registra CRUD
+- [ ] ConfigFiscal registra cambios (deferred to future iteration)
+- [x] `GET /api/audit` permite consultar historial
+- [x] Audit incluye IP y user-agent
+- [x] Test: modificar producto, verificar audit log creado
 
 ---
 
