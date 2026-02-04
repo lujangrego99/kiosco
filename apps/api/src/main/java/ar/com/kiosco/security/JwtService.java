@@ -133,9 +133,9 @@ public class JwtService {
     }
 
     private SecretKey getSigningKey() {
-        // Ensure key is at least 256 bits (32 bytes) for HS256
+        // Ensure key is at least 512 bits (64 bytes) for HS512, or at least 256 bits for HS256
         String key = secretKey;
-        while (key.length() < 32) {
+        while (key.length() < 64) {
             key = key + key;
         }
         byte[] keyBytes = key.substring(0, 64).getBytes();

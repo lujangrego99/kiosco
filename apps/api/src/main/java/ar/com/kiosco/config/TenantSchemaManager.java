@@ -7,6 +7,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StreamUtils;
@@ -40,17 +41,27 @@ public class TenantSchemaManager {
      * @param kiosco The kiosco entity
      * @return The schema name created
      */
-    @Transactional
     public String createTenantSchema(Kiosco kiosco) {
         String schemaName = getSchemaName(kiosco.getId());
 
         log.info("Creating tenant schema: {}", schemaName);
 
-        // Create schema
-        jdbcTemplate.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+        // Use a single connection for both schema creation and table creation
+        try {
+            Connection connection = Objects.requireNonNull(jdbcTemplate.getDataSource()).getConnection();
+            try (Statement stmt = connection.createStatement()) {
+                // Create schema
+                stmt.execute("CREATE SCHEMA IF NOT EXISTS " + schemaName);
+                log.debug("Schema {} created", schemaName);
 
-        // Execute tenant template in the new schema
-        executeTenantTemplate(schemaName);
+                // Execute tenant template in the new schema
+                executeTenantTemplateWithConnection(connection, schemaName);
+            } finally {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Failed to create tenant schema: " + schemaName, e);
+        }
 
         log.info("Successfully created tenant schema: {}", schemaName);
         return schemaName;
@@ -98,7 +109,7 @@ public class TenantSchemaManager {
         jdbcTemplate.execute("DROP SCHEMA IF EXISTS " + schemaName + " CASCADE");
     }
 
-    private void executeTenantTemplate(String schemaName) {
+    private void executeTenantTemplateWithConnection(Connection connection, String schemaName) throws SQLException {
         try {
             // Find all tenant migration files and sort them by version
             PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
@@ -117,37 +128,67 @@ public class TenantSchemaManager {
                 return Integer.MAX_VALUE;
             }));
 
-            // Get connection and execute SQL with search_path set to tenant schema
-            Connection connection = Objects.requireNonNull(jdbcTemplate.getDataSource()).getConnection();
+            // Execute SQL with search_path set to tenant schema (use the provided connection)
             try (Statement stmt = connection.createStatement()) {
-                // Set search_path to the tenant schema
+                // FIRST: Set search_path to ONLY the tenant schema (no public fallback)
                 stmt.execute("SET search_path TO " + schemaName);
+                log.debug("Set search_path to {}", schemaName);
 
                 // Execute each migration file
                 for (Resource resource : resources) {
                     log.info("Executing tenant migration: {} in schema: {}", resource.getFilename(), schemaName);
                     String sql = StreamUtils.copyToString(resource.getInputStream(), StandardCharsets.UTF_8);
 
-                    // Execute each statement from the migration
-                    for (String statement : sql.split(";")) {
-                        String trimmed = statement.trim();
-                        if (!trimmed.isEmpty() && !trimmed.startsWith("--")) {
-                            stmt.execute(trimmed);
+                    // Parse SQL statements - accumulate until we find a semicolon at end of line
+                    StringBuilder currentStatement = new StringBuilder();
+                    boolean inStatement = false;
+
+                    for (String line : sql.split("\n")) {
+                        String trimmedLine = line.trim();
+
+                        // Skip empty lines and comment-only lines when not in a statement
+                        if (!inStatement && (trimmedLine.isEmpty() || trimmedLine.startsWith("--"))) {
+                            continue;
+                        }
+
+                        // Start a new statement if we see a SQL keyword
+                        if (!inStatement && !trimmedLine.isEmpty() && !trimmedLine.startsWith("--")) {
+                            inStatement = true;
+                            currentStatement = new StringBuilder();
+                        }
+
+                        if (inStatement) {
+                            // Remove inline comments but keep the line
+                            int commentIdx = line.indexOf("--");
+                            String cleanLine = (commentIdx >= 0) ? line.substring(0, commentIdx) : line;
+                            currentStatement.append(cleanLine).append("\n");
+
+                            // Check if statement is complete: line ends with ; (possibly with whitespace)
+                            String lineForCheck = cleanLine.trim();
+                            if (lineForCheck.endsWith(";")) {
+                                String finalStatement = currentStatement.toString().trim();
+                                // Remove trailing semicolon
+                                if (finalStatement.endsWith(";")) {
+                                    finalStatement = finalStatement.substring(0, finalStatement.length() - 1).trim();
+                                }
+                                if (!finalStatement.isEmpty()) {
+                                    log.debug("Executing: {}...", finalStatement.length() > 50 ? finalStatement.substring(0, 50) : finalStatement);
+                                    stmt.execute(finalStatement);
+                                }
+                                inStatement = false;
+                                currentStatement = new StringBuilder();
+                            }
                         }
                     }
                 }
 
                 // Reset search_path
                 stmt.execute("SET search_path TO public");
-            } finally {
-                connection.close();
             }
 
             log.info("Executed all tenant migrations in schema: {}", schemaName);
         } catch (IOException e) {
             throw new RuntimeException("Failed to read tenant migrations from: " + TENANT_MIGRATIONS_PATH, e);
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to execute tenant migrations in schema: " + schemaName, e);
         }
     }
 }

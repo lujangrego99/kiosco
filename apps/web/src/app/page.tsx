@@ -1,16 +1,36 @@
-import Link from 'next/link'
-import { Package, Tags, ShoppingCart, Calendar, Building2 } from 'lucide-react'
-import { VencimientosAlerta } from '@/components/vencimientos'
+'use client'
 
-export default function Home() {
+import Link from 'next/link'
+import { Package, Tags, ShoppingCart, Calendar, Building2, LogOut, User } from 'lucide-react'
+import { VencimientosAlerta } from '@/components/vencimientos'
+import { AuthGuard } from '@/components/auth-guard'
+import { useAuth } from '@/lib/auth'
+import { Button } from '@/components/ui/button'
+
+function HomeContent() {
+  const { usuario, kiosco, logout } = useAuth()
+
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto py-12 px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-2">Kiosco</h1>
-          <p className="text-muted-foreground">
-            Sistema operativo para kioscos argentinos
-          </p>
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Kiosco</h1>
+            <p className="text-muted-foreground">
+              Sistema operativo para kioscos argentinos
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+              <User className="h-4 w-4" />
+              <span>{usuario?.nombre}</span>
+            </div>
+            <div className="text-sm font-medium mb-2">{kiosco?.nombre}</div>
+            <Button variant="outline" size="sm" onClick={logout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Cerrar sesión
+            </Button>
+          </div>
         </div>
 
         <div className="max-w-4xl mx-auto mb-6">
@@ -75,5 +95,13 @@ export default function Home() {
         </div>
       </div>
     </main>
+  )
+}
+
+export default function Home() {
+  return (
+    <AuthGuard>
+      <HomeContent />
+    </AuthGuard>
   )
 }
