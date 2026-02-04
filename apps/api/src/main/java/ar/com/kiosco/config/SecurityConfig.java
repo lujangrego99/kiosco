@@ -1,6 +1,7 @@
 package ar.com.kiosco.config;
 
 import ar.com.kiosco.security.KioscoContextFilter;
+import ar.com.kiosco.security.SubscriptionFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +30,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final KioscoContextFilter kioscoContextFilter;
+    private final SubscriptionFilter subscriptionFilter;
     private final UserDetailsService userDetailsService;
 
     @Bean
@@ -47,7 +49,8 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(kioscoContextFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(kioscoContextFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(subscriptionFilter, KioscoContextFilter.class);
 
         return http.build();
     }

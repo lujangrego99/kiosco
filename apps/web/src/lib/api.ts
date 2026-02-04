@@ -43,6 +43,17 @@ async function handleResponse<T>(response: Response): Promise<T> {
     }
     throw new Error('Sesión expirada. Por favor, inicia sesión nuevamente.');
   }
+  // Handle subscription errors (402 Payment Required)
+  if (response.status === 402) {
+    const data = await response.json().catch(() => ({ code: 'SUBSCRIPTION_ERROR', message: 'Error de suscripción' }));
+    if (typeof window !== 'undefined') {
+      // Redirect to plan page with appropriate message
+      const params = new URLSearchParams();
+      if (data.code) params.set('error', data.code);
+      window.location.href = `/configuracion/plan?${params.toString()}`;
+    }
+    throw new Error(data.message || 'Tu suscripción requiere atención.');
+  }
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Error de conexión' }));
     throw new Error(error.message || `Error ${response.status}`);

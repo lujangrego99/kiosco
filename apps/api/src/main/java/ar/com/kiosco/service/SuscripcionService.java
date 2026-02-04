@@ -13,9 +13,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -62,6 +66,7 @@ public class SuscripcionService {
                 .collect(Collectors.toList());
     }
 
+    @CacheEvict(value = "subscriptionStatus", key = "#dto.kioscoId()")
     @Transactional
     public SuscripcionDTO crear(SuscripcionCreateDTO dto) {
         Kiosco kiosco = kioscoRepository.findById(dto.kioscoId())
@@ -99,6 +104,7 @@ public class SuscripcionService {
         return SuscripcionDTO.fromEntity(suscripcion);
     }
 
+    @CacheEvict(value = "subscriptionStatus", key = "#kioscoId")
     @Transactional
     public SuscripcionDTO cambiarPlan(UUID kioscoId, UUID nuevoPlanId) {
         Kiosco kiosco = kioscoRepository.findById(kioscoId)
@@ -136,6 +142,8 @@ public class SuscripcionService {
         Suscripcion suscripcion = suscripcionRepository.findById(suscripcionId)
                 .orElseThrow(() -> new EntityNotFoundException("Suscripción no encontrada: " + suscripcionId));
 
+        UUID kioscoId = suscripcion.getKiosco().getId();
+
         suscripcion.setEstado(Suscripcion.Estado.CANCELADA);
         suscripcion = suscripcionRepository.save(suscripcion);
 
@@ -143,6 +151,9 @@ public class SuscripcionService {
         Kiosco kiosco = suscripcion.getKiosco();
         kiosco.setPlan("free");
         kioscoRepository.save(kiosco);
+
+        // Invalidate cache
+        invalidateSubscriptionCache(kioscoId);
 
         return SuscripcionDTO.fromEntity(suscripcion);
     }
@@ -152,6 +163,8 @@ public class SuscripcionService {
         List<Suscripcion> vencidas = suscripcionRepository.findVencidas(LocalDate.now());
 
         for (Suscripcion suscripcion : vencidas) {
+            UUID kioscoId = suscripcion.getKiosco().getId();
+
             suscripcion.setEstado(Suscripcion.Estado.VENCIDA);
             suscripcionRepository.save(suscripcion);
 
@@ -159,6 +172,9 @@ public class SuscripcionService {
             Kiosco kiosco = suscripcion.getKiosco();
             kiosco.setPlan("free");
             kioscoRepository.save(kiosco);
+
+            // Invalidate cache
+            invalidateSubscriptionCache(kioscoId);
         }
 
         return vencidas.stream()
@@ -172,5 +188,37 @@ public class SuscripcionService {
         return activas.stream()
                 .map(s -> s.getPlan().getPrecioMensual() != null ? s.getPlan().getPrecioMensual() : BigDecimal.ZERO)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * Get subscription status for a kiosco.
+     * Used by SubscriptionFilter to validate access.
+     * Cached for performance - invalidated when subscription changes.
+     */
+    @Cacheable(value = "subscriptionStatus", key = "#kioscoId")
+    @Transactional(readOnly = true)
+    public Suscripcion.Estado getSubscriptionStatus(UUID kioscoId) {
+        Optional<Suscripcion> suscripcion = suscripcionRepository.findActivaByKioscoId(kioscoId);
+
+        if (suscripcion.isEmpty()) {
+            // Check for trial or vencida status
+            List<Suscripcion> todas = suscripcionRepository.findByKioscoId(kioscoId);
+            if (todas.isEmpty()) {
+                // No subscription at all - return CANCELADA as default "no subscription"
+                return Suscripcion.Estado.CANCELADA;
+            }
+            // Return the most recent subscription status
+            return todas.get(0).getEstado();
+        }
+
+        return suscripcion.get().getEstado();
+    }
+
+    /**
+     * Invalidate subscription status cache for a kiosco.
+     */
+    @CacheEvict(value = "subscriptionStatus", key = "#kioscoId")
+    public void invalidateSubscriptionCache(UUID kioscoId) {
+        // Cache eviction only
     }
 }

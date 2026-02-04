@@ -4,7 +4,7 @@
 
 ## Priority: 2
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -125,12 +125,12 @@ if (response.status === 402) {
 
 ## Acceptance Criteria
 
-- [ ] `SubscriptionFilter` bloquea requests si suscripcion no esta ACTIVA
-- [ ] HTTP 402 con mensaje claro cuando suscripcion vencida
-- [ ] Scheduled job marca suscripciones como VENCIDA cuando pasa fecha_fin
-- [ ] Endpoints de auth, health, admin excluidos del filtro
-- [ ] Frontend maneja 402 y redirige a pagina de plan
-- [ ] Test E2E: kiosco con suscripcion vencida recibe 402
+- [x] `SubscriptionFilter` bloquea requests si suscripcion no esta ACTIVA
+- [x] HTTP 402 con mensaje claro cuando suscripcion vencida
+- [x] Scheduled job marca suscripciones como VENCIDA cuando pasa fecha_fin
+- [x] Endpoints de auth, health, admin excluidos del filtro
+- [x] Frontend maneja 402 y redirige a pagina de plan
+- [ ] Test E2E: kiosco con suscripcion vencida recibe 402 (manual testing)
 
 ---
 
