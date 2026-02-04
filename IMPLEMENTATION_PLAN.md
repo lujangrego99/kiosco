@@ -26,9 +26,18 @@
 | 017 | Multi-Kiosco | COMPLETE | 100% |
 | 018 | Impresora | COMPLETE | 100% |
 | 019 | Admin Panel | COMPLETE | 100% |
+| **020** | **Plan Limits Validation** | **PENDING** | 0% |
+| **021** | **Subscription Enforcement** | **PENDING** | 0% |
+| **022** | **Tenant Migrations** | **PENDING** | 0% |
+| **023** | **Login State Validation** | **PENDING** | 0% |
+| **024** | **Audit Logging** | **PENDING** | 0% |
+| **025** | **Tenant Backups** | **PENDING** | 0% |
+| **026** | **Data Encryption** | **PENDING** | 0% |
+| **027** | **Isolation Tests** | **PENDING** | 0% |
 
 **MVP Progress: 19/19 specs (100%) ✅**
-**Production Ready: YES - All features implemented**
+**SaaS Governance: 0/8 specs (0%)**
+**Production Ready: YES (MVP) - SaaS features in progress**
 
 ---
 
@@ -191,5 +200,246 @@ All implementation completed!
 ---
 
 **Generated**: 2026-02-01
-**Last Updated**: 2026-02-01
-**Re-verified**: 2026-02-01 - All specs COMPLETE
+**Last Updated**: 2026-02-04
+**Re-verified**: 2026-02-01 - MVP specs COMPLETE, SaaS governance PENDING
+
+---
+
+## Phase 2: SaaS Governance (Specs 020-027)
+
+### Priority Tasks
+
+#### Spec 020: Plan Limits Validation (Priority 1) 🔴
+> Enforce los límites definidos en cada plan (maxProductos, maxVentasMes, maxUsuarios)
+
+- [ ] [HIGH] Create `PlanLimitService` with validation methods
+  - `validateCanCreateProducto(kioscoId)` - Check against plan.maxProductos
+  - `validateCanCreateUsuario(kioscoId)` - Check against plan.maxUsuarios
+  - `validateCanCreateVenta(kioscoId)` - Check against plan.maxVentasMes (monthly count)
+  - `getUsage(kioscoId)` - Return current usage vs limits DTO
+- [ ] [HIGH] Create `PlanLimitExceededException` with HTTP 402 status
+  - Fields: limitType (PRODUCTOS/USUARIOS/VENTAS), current, limit, planName
+- [ ] [HIGH] Integrate validation in ProductoService.crear()
+- [ ] [HIGH] Integrate validation in VentaService.crear()
+- [ ] [MEDIUM] Integrate validation in KioscoMemberService (if exists) or user creation flow
+- [ ] [MEDIUM] Create `GET /api/plan/usage` endpoint
+- [ ] [MEDIUM] Update UsoMensual on entity creation (event listeners or direct update)
+- [ ] [LOW] Add unit tests for each validation
+- [ ] [LOW] Add E2E test: create products until limit exceeded, verify 402
+
+**Existing code to modify:**
+- `ProductoService.java` - Add validation before create
+- `VentaService.java` - Add validation before create
+- `UsoMensualRepository.java` - Already exists, may need additional queries
+
+**New files to create:**
+- `PlanLimitService.java`
+- `PlanLimitExceededException.java`
+- `PlanUsageDTO.java`
+- `PlanController.java` (for /api/plan/usage)
+
+---
+
+#### Spec 021: Subscription Enforcement (Priority 2) 🔴
+> Bloquear acceso a kioscos con suscripción vencida o cancelada
+
+- [ ] [HIGH] Create `SubscriptionFilter` (OncePerRequestFilter)
+  - Order: after auth, before tenant filter
+  - Check subscription status from SuscripcionService
+  - Return HTTP 402 for VENCIDA/CANCELADA/SIN_SUSCRIPCION
+  - Exclude: /api/auth/*, /api/health, /api/admin/*, /api/pagos/webhook
+- [ ] [HIGH] Implement subscription status check with Redis cache
+- [ ] [MEDIUM] Create scheduled job to mark expired subscriptions as VENCIDA
+  - Cron: daily at midnight
+  - Query: ACTIVA subscriptions with fechaFin < today
+- [ ] [MEDIUM] Add grace period support (optional, configurable days)
+- [ ] [MEDIUM] Frontend: handle 402 and redirect to /configuracion/plan
+- [ ] [LOW] Add unit tests for filter logic
+- [ ] [LOW] Add E2E test: expired subscription returns 402
+
+**Existing code to modify:**
+- `SecurityConfig.java` - Add SubscriptionFilter to chain
+- `SuscripcionService.java` - Add status check method
+- `api.ts` (frontend) - Handle 402 response
+
+**New files to create:**
+- `SubscriptionFilter.java`
+- `SubscriptionStatusDTO.java`
+- `SubscriptionScheduledTasks.java`
+
+---
+
+#### Spec 022: Tenant Migrations (Priority 3) 🟡
+> Sistema para aplicar migraciones de schema a todos los tenants existentes
+
+- [ ] [HIGH] Create `TenantMigrationService`
+  - `listTenantSchemas()` - Query all kiosco_* schemas
+  - `getCurrentVersion(schema)` - Read from schema_version table
+  - `migrateTenant(schema)` - Apply pending migrations
+  - `migrateAllTenants()` - Process all with report
+- [ ] [HIGH] Create tenant migration V100__tenant_schema_version.sql
+- [ ] [MEDIUM] Create `POST /api/admin/migrations/run` endpoint (superadmin only)
+- [ ] [MEDIUM] Add startup check for outdated tenants (ApplicationReadyEvent)
+- [ ] [LOW] Consider CLI command or gradle task
+- [ ] [LOW] Add tests for migration service
+
+**Existing code to reference:**
+- `TenantSchemaManager.java` - Already creates schemas, use similar pattern
+
+**New files to create:**
+- `TenantMigrationService.java`
+- `MigrationReport.java`
+- `AdminMigrationController.java`
+- `db/tenant/V100__tenant_schema_version.sql`
+
+---
+
+#### Spec 023: Login State Validation (Priority 4) 🟡
+> Validar que el kiosco esté activo y con suscripción válida al hacer login
+
+- [ ] [HIGH] Modify `AuthService.login()` to filter inactive kioscos
+  - Check kiosco.activo = true
+  - Check subscription status (free plan always valid)
+  - Return only valid memberships
+- [ ] [HIGH] Create `KioscoInactiveException` with HTTP 403
+- [ ] [MEDIUM] Return detailed error with list of inactive kioscos and reasons
+- [ ] [MEDIUM] Frontend: handle 403 with specific message
+- [ ] [LOW] Add unit tests
+- [ ] [LOW] Add test: user with mixed active/inactive kioscos
+
+**Existing code to modify:**
+- `AuthService.java` - Add validation logic in login()
+- `SuscripcionRepository.java` - May need findActiveByKioscoId query
+
+**New files to create:**
+- `KioscoInactiveException.java`
+- `KioscoStatusDTO.java`
+
+---
+
+#### Spec 024: Audit Logging (Priority 5) 🟢
+> Registrar quién hizo qué en operaciones críticas
+
+- [ ] [HIGH] Create `audit_log` table in tenant schema (migration)
+- [ ] [HIGH] Create `AuditLog` entity
+- [ ] [HIGH] Create `AuditService` with logCreate/Update/Delete methods
+- [ ] [HIGH] Integrate in ProductoService (create, update, delete)
+- [ ] [MEDIUM] Integrate in VentaService (create, anular)
+- [ ] [MEDIUM] Integrate in ClienteService (CRUD)
+- [ ] [MEDIUM] Integrate in ConfigFiscal updates
+- [ ] [MEDIUM] Create `GET /api/audit` endpoint with filters
+- [ ] [LOW] Capture IP and user-agent from request
+- [ ] [LOW] Add unit tests
+
+**New files to create:**
+- `db/tenant/V8__audit_log.sql`
+- `AuditLog.java`
+- `AuditLogRepository.java`
+- `AuditService.java`
+- `AuditController.java`
+- `AuditDTO.java`
+
+---
+
+#### Spec 025: Tenant Backups (Priority 6) 🟢
+> Sistema de backup automático para cada schema tenant
+
+- [ ] [HIGH] Create `BackupService` with pg_dump integration
+  - `backupTenant(schemaName)` - Generate compressed dump
+  - `backupAllTenants()` - Process all with report
+  - `listBackups(schemaName)` - List available backups
+  - `restoreBackup(schemaName, backupFile)` - Restore from file
+- [ ] [HIGH] Create scheduled backup job (cron: 0 0 3 * * * - 3AM daily)
+- [ ] [MEDIUM] Create retention cleanup job (30 days default)
+- [ ] [MEDIUM] Create admin endpoints for manual backup/restore
+- [ ] [LOW] Add S3 storage option (optional)
+- [ ] [LOW] Add tests
+
+**New files to create:**
+- `BackupService.java`
+- `BackupResult.java`
+- `BackupScheduledTasks.java`
+- `AdminBackupController.java`
+
+**Configuration:**
+- `application.yml` - backup.path, backup.retention-days
+
+---
+
+#### Spec 026: Data Encryption (Priority 7) 🟢
+> Encriptar datos sensibles (emails, CUITs) en la base de datos
+
+- [ ] [MEDIUM] Enable pgcrypto extension in PostgreSQL
+- [ ] [MEDIUM] Create `EncryptedStringConverter` for JPA
+- [ ] [MEDIUM] Migrate usuarios.email to encrypted
+- [ ] [MEDIUM] Migrate config_fiscal.cuit to encrypted
+- [ ] [MEDIUM] Migrate clientes.email and telefono to encrypted
+- [ ] [LOW] Add email_hash column for searchability
+- [ ] [LOW] Key management via environment variable
+- [ ] [LOW] Add migration scripts and tests
+
+**New files to create:**
+- `EncryptedStringConverter.java`
+- `EncryptionService.java`
+- `db/migration/V12__encryption_setup.sql`
+
+**Configuration:**
+- `application.yml` - encryption.key from env
+
+---
+
+#### Spec 027: Isolation Tests (Priority 8) 🟢
+> Suite de tests que verifican que un tenant no puede ver datos de otro
+
+- [ ] [HIGH] Create `TenantIsolationTest` base class
+- [ ] [HIGH] Test: tenantA cannot see tenantB products
+- [ ] [MEDIUM] Test for each entity: categoria, cliente, venta, lote, proveedor
+- [ ] [MEDIUM] Test: requests without context cannot access tenant data
+- [ ] [MEDIUM] Test: schema name is sanitized (SQL injection prevention)
+- [ ] [LOW] Test E2E via API with two different users
+- [ ] [LOW] Integrate in CI/CD
+
+**New files to create:**
+- `TenantIsolationTest.java`
+- `TenantSecurityTest.java`
+- `TenantApiIsolationTest.java`
+
+---
+
+## Dependencies Graph (Phase 2)
+
+```
+019 Admin Panel ✅ (planes, suscripciones tables exist)
+  │
+  ├─> 020 Plan Limits Validation 🔴
+  │     └─> 021 Subscription Enforcement 🔴
+  │           └─> 023 Login State Validation 🟡
+  │
+  ├─> 022 Tenant Migrations 🟡 (independent)
+  │
+  ├─> 024 Audit Logging 🟢 (can start anytime)
+  │
+  ├─> 025 Tenant Backups 🟢 (depends on 022 for migration awareness)
+  │
+  ├─> 026 Data Encryption 🟢 (can start anytime, careful with existing data)
+  │
+  └─> 027 Isolation Tests 🟢 (should run last as verification)
+```
+
+**Legend:**
+- 🔴 Critical - Must complete first (core SaaS features)
+- 🟡 Important - Should complete before production
+- 🟢 Optional - Can be done incrementally
+
+---
+
+## Recommended Order for Ralph
+
+1. **020** - Plan Limits (foundation for billing)
+2. **021** - Subscription Enforcement (blocks non-paying users)
+3. **022** - Tenant Migrations (infrastructure for future changes)
+4. **023** - Login State Validation (UX improvement)
+5. **024** - Audit Logging (compliance)
+6. **027** - Isolation Tests (verification)
+7. **025** - Tenant Backups (operations)
+8. **026** - Data Encryption (security hardening)
