@@ -3,10 +3,15 @@ package ar.com.kiosco.service;
 import ar.com.kiosco.config.TenantSchemaManager;
 import ar.com.kiosco.domain.Kiosco;
 import ar.com.kiosco.domain.KioscoMember;
+import ar.com.kiosco.domain.Suscripcion;
 import ar.com.kiosco.domain.Usuario;
 import ar.com.kiosco.dto.AuthDTO;
+import ar.com.kiosco.exception.KioscoInactiveException;
+import ar.com.kiosco.exception.KioscoInactiveException.InactiveKioscoInfo;
+import ar.com.kiosco.exception.KioscoInactiveException.InactiveReason;
 import ar.com.kiosco.repository.KioscoMemberRepository;
 import ar.com.kiosco.repository.KioscoRepository;
+import ar.com.kiosco.repository.SuscripcionRepository;
 import ar.com.kiosco.repository.UsuarioRepository;
 import ar.com.kiosco.security.JwtService;
 import ar.com.kiosco.security.KioscoContext;
@@ -19,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -32,6 +38,7 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final KioscoRepository kioscoRepository;
     private final KioscoMemberRepository kioscoMemberRepository;
+    private final SuscripcionRepository suscripcionRepository;
     private final TenantSchemaManager tenantSchemaManager;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
@@ -106,6 +113,8 @@ public class AuthService {
     /**
      * Authenticates a user. If they belong to multiple kioscos and no kioscoId is provided,
      * returns an account response with all their kioscos.
+     *
+     * Filters out inactive kioscos and those with expired subscriptions.
      */
     @Transactional(readOnly = true)
     public Object login(AuthDTO.LoginRequest request) {
@@ -123,14 +132,53 @@ public class AuthService {
             throw new IllegalArgumentException("El usuario no pertenece a ningun kiosco");
         }
 
-        // If kioscoId provided, login directly
-        if (request.getKioscoId() != null) {
-            return loginToKiosco(usuario, memberships, request.getKioscoId());
+        // Filter only active kioscos with valid subscriptions
+        List<KioscoMember> validMemberships = new ArrayList<>();
+        List<InactiveKioscoInfo> inactiveKioscos = new ArrayList<>();
+
+        for (KioscoMember membership : memberships) {
+            Kiosco kiosco = membership.getKiosco();
+
+            // Check if kiosco is active
+            if (!Boolean.TRUE.equals(kiosco.getActivo())) {
+                inactiveKioscos.add(new InactiveKioscoInfo(kiosco.getNombre(), InactiveReason.INACTIVO));
+                continue;
+            }
+
+            // Check subscription status (free plan always valid)
+            InactiveReason subscriptionReason = checkSubscriptionStatus(kiosco);
+            if (subscriptionReason != null) {
+                inactiveKioscos.add(new InactiveKioscoInfo(kiosco.getNombre(), subscriptionReason));
+                continue;
+            }
+
+            validMemberships.add(membership);
         }
 
-        // If only one kiosco, login directly
-        if (memberships.size() == 1) {
-            KioscoMember membership = memberships.get(0);
+        // If all kioscos are inactive, throw error
+        if (validMemberships.isEmpty()) {
+            throw new KioscoInactiveException(
+                    "No tienes acceso a ningun kiosco activo. Contacta al administrador.",
+                    inactiveKioscos
+            );
+        }
+
+        // Log warning if some kioscos are inactive
+        if (!inactiveKioscos.isEmpty()) {
+            log.warn("Usuario {} tiene {} kioscos inactivos: {}",
+                    usuario.getEmail(),
+                    inactiveKioscos.size(),
+                    inactiveKioscos.stream().map(InactiveKioscoInfo::getNombre).toList());
+        }
+
+        // If kioscoId provided, login directly (must be in valid memberships)
+        if (request.getKioscoId() != null) {
+            return loginToKiosco(usuario, validMemberships, request.getKioscoId());
+        }
+
+        // If only one valid kiosco, login directly
+        if (validMemberships.size() == 1) {
+            KioscoMember membership = validMemberships.get(0);
             String token = jwtService.generateToken(usuario, membership.getKiosco().getId(), membership.getRol());
             return AuthDTO.AuthResponse.builder()
                     .token(token)
@@ -140,12 +188,12 @@ public class AuthService {
                     .build();
         }
 
-        // Multiple kioscos - return account token for selection
+        // Multiple valid kioscos - return account token for selection
         String accountToken = jwtService.generateAccountToken(usuario);
         return AuthDTO.AccountResponse.builder()
                 .token(accountToken)
                 .usuario(mapUsuario(usuario))
-                .kioscos(memberships.stream()
+                .kioscos(validMemberships.stream()
                         .map(m -> AuthDTO.KioscoMembershipResponse.builder()
                                 .kioscoId(m.getKiosco().getId())
                                 .nombre(m.getKiosco().getNombre())
@@ -154,6 +202,32 @@ public class AuthService {
                                 .build())
                         .toList())
                 .build();
+    }
+
+    /**
+     * Checks if the kiosco has a valid subscription.
+     * Free plan always considered valid.
+     *
+     * @return null if subscription is valid, or the InactiveReason if not
+     */
+    private InactiveReason checkSubscriptionStatus(Kiosco kiosco) {
+        // Free plan doesn't require subscription
+        if ("free".equalsIgnoreCase(kiosco.getPlan())) {
+            return null;
+        }
+
+        // Check for active subscription
+        var subscription = suscripcionRepository.findActivaByKioscoId(kiosco.getId());
+        if (subscription.isEmpty()) {
+            // Check if there's a cancelled subscription
+            var cancelled = suscripcionRepository.findByKioscoIdAndEstado(kiosco.getId(), Suscripcion.Estado.CANCELADA);
+            if (cancelled.isPresent()) {
+                return InactiveReason.SUSCRIPCION_CANCELADA;
+            }
+            return InactiveReason.SUSCRIPCION_VENCIDA;
+        }
+
+        return null; // Subscription is valid
     }
 
     /**

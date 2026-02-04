@@ -1,5 +1,6 @@
 package ar.com.kiosco.config;
 
+import ar.com.kiosco.exception.KioscoInactiveException;
 import ar.com.kiosco.exception.PlanLimitExceededException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,29 @@ public class GlobalExceptionHandler {
         response.put("upgradeUrl", "/configuracion/plan");
 
         return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(response);
+    }
+
+    @ExceptionHandler(KioscoInactiveException.class)
+    public ResponseEntity<Map<String, Object>> handleKioscoInactive(KioscoInactiveException ex) {
+        log.warn("Kiosco inactive: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("status", 403);
+        response.put("error", "Kiosco Inactivo");
+        response.put("message", ex.getMessage());
+        response.put("code", "KIOSCO_INACTIVE");
+        response.put("inactiveKioscos", ex.getInactiveKioscos().stream()
+                .map(k -> {
+                    Map<String, String> kioscoInfo = new HashMap<>();
+                    kioscoInfo.put("nombre", k.getNombre());
+                    kioscoInfo.put("reason", k.getReason().name());
+                    return kioscoInfo;
+                })
+                .toList());
+        response.put("contactUrl", "/soporte");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)

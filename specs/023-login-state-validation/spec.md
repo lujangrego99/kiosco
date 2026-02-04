@@ -4,7 +4,7 @@
 
 ## Priority: 4
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -114,13 +114,13 @@ try {
 
 ## Acceptance Criteria
 
-- [ ] Login filtra kioscos donde `activo = false`
-- [ ] Login filtra kioscos con suscripcion vencida/cancelada
-- [ ] Plan "free" siempre se considera con suscripcion valida
-- [ ] Si todos los kioscos del usuario estan inactivos, error 403
-- [ ] Si algunos estan activos y otros no, login OK con los activos
-- [ ] Response de error incluye lista de kioscos inactivos y razon
-- [ ] Test: usuario con 2 kioscos, uno activo y uno inactivo, login muestra solo el activo
+- [x] Login filtra kioscos donde `activo = false`
+- [x] Login filtra kioscos con suscripcion vencida/cancelada
+- [x] Plan "free" siempre se considera con suscripcion valida
+- [x] Si todos los kioscos del usuario estan inactivos, error 403
+- [x] Si algunos estan activos y otros no, login OK con los activos
+- [x] Response de error incluye lista de kioscos inactivos y razon
+- [x] Test: usuario con 2 kioscos, uno activo y uno inactivo, login muestra solo el activo
 
 ---
 

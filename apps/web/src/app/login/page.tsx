@@ -2,14 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth'
+import { useAuth, AuthError, InactiveKioscoInfo } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import { Store, Mail, Lock, User } from 'lucide-react'
+import { Store, Mail, Lock, User, AlertTriangle } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,6 +18,10 @@ export default function LoginPage() {
   const { toast } = useToast()
 
   const [isLoading, setIsLoading] = useState(false)
+  const [inactiveError, setInactiveError] = useState<{
+    message: string
+    inactiveKioscos: InactiveKioscoInfo[]
+  } | null>(null)
 
   // Login form
   const [loginEmail, setLoginEmail] = useState('')
@@ -31,17 +36,25 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setInactiveError(null)
 
     try {
       await login(loginEmail, loginPassword)
       toast({ title: 'Sesión iniciada', description: 'Bienvenido!' })
       router.push('/')
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Error al iniciar sesión',
-        variant: 'destructive',
-      })
+      if (error instanceof AuthError && error.code === 'KIOSCO_INACTIVE') {
+        setInactiveError({
+          message: error.message,
+          inactiveKioscos: error.inactiveKioscos || [],
+        })
+      } else {
+        toast({
+          title: 'Error',
+          description: error instanceof Error ? error.message : 'Error al iniciar sesión',
+          variant: 'destructive',
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -138,6 +151,27 @@ export default function LoginPage() {
             </TabsList>
 
             <TabsContent value="login">
+              {inactiveError && (
+                <Alert variant="destructive" className="mt-4 mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Kiosco Inactivo</AlertTitle>
+                  <AlertDescription>
+                    <p className="mb-2">{inactiveError.message}</p>
+                    {inactiveError.inactiveKioscos.length > 0 && (
+                      <ul className="text-sm list-disc list-inside">
+                        {inactiveError.inactiveKioscos.map((k, i) => (
+                          <li key={i}>
+                            {k.nombre}:{' '}
+                            {k.reason === 'INACTIVO' && 'Desactivado'}
+                            {k.reason === 'SUSCRIPCION_VENCIDA' && 'Suscripción vencida'}
+                            {k.reason === 'SUSCRIPCION_CANCELADA' && 'Suscripción cancelada'}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
               <form onSubmit={handleLogin} className="space-y-4 mt-4">
                 <div className="space-y-2">
                   <Label htmlFor="login-email">Email</Label>

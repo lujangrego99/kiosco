@@ -37,6 +37,30 @@ export interface AccountResponse {
   kioscos: KioscoMembership[]
 }
 
+export interface InactiveKioscoInfo {
+  nombre: string
+  reason: 'INACTIVO' | 'SUSCRIPCION_VENCIDA' | 'SUSCRIPCION_CANCELADA'
+}
+
+export interface KioscoInactiveError {
+  code: 'KIOSCO_INACTIVE'
+  message: string
+  inactiveKioscos: InactiveKioscoInfo[]
+  contactUrl: string
+}
+
+export class AuthError extends Error {
+  code?: string
+  inactiveKioscos?: InactiveKioscoInfo[]
+
+  constructor(message: string, code?: string, inactiveKioscos?: InactiveKioscoInfo[]) {
+    super(message)
+    this.code = code
+    this.inactiveKioscos = inactiveKioscos
+    this.name = 'AuthError'
+  }
+}
+
 interface AuthContextType {
   token: string | null
   usuario: Usuario | null
@@ -86,7 +110,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Error de conexión' }))
-      throw new Error(error.message || 'Error al iniciar sesión')
+
+      // Handle KIOSCO_INACTIVE error specifically
+      if (error.code === 'KIOSCO_INACTIVE') {
+        throw new AuthError(
+          error.message || 'Tu kiosco esta inactivo',
+          error.code,
+          error.inactiveKioscos
+        )
+      }
+
+      throw new AuthError(error.message || 'Error al iniciar sesión')
     }
 
     const data = await response.json()
