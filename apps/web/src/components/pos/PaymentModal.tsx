@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { useCartStore } from '@/stores/cart-store';
 import { syncService } from '@/lib/sync';
 import { getNextVentaNumero, setNextVentaNumero } from '@/lib/db';
-import { cuentaCorrienteApi, configPagosApi } from '@/lib/api';
-import type { MedioPago, Cliente, MetodosPagoHabilitados } from '@/types';
+import { cuentaCorrienteApi, configPagosApi, ventasApi } from '@/lib/api';
+import type { MedioPago, Cliente, MetodosPagoHabilitados, VentaCreate } from '@/types';
+import { toast } from '@/hooks/use-toast';
 import { Loader2, Banknote, CreditCard, Building2, Clock, AlertTriangle, QrCode, Smartphone, ArrowLeft } from 'lucide-react';
 import { ClienteSelect } from '@/components/clientes';
 import { QrPayment } from './QrPayment';
@@ -168,8 +169,22 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
         0
       );
 
-      // Save venta locally (works offline)
-      await syncService.saveVentaLocally({
+      const backendMedioPago = mapToBackendMedioPago(medioPago);
+
+      // Prepare venta data for API
+      const ventaCreate: VentaCreate = {
+        items: items.map((item) => ({
+          productoId: item.producto.id,
+          cantidad: item.cantidad,
+        })),
+        medioPago: backendMedioPago,
+        descuento: 0,
+        montoRecibido: medioPago === 'EFECTIVO' ? parseFloat(montoRecibido) : undefined,
+        clienteId: selectedClienteId,
+      };
+
+      // Prepare local venta data
+      const localVentaData = {
         id: generateId(),
         numero,
         items: items.map((item) => ({
@@ -183,12 +198,33 @@ export function PaymentModal({ open, onClose, onSuccess }: PaymentModalProps) {
         subtotal,
         descuento: 0,
         total,
-        medioPago: mapToBackendMedioPago(medioPago),
+        medioPago: backendMedioPago,
         montoRecibido: medioPago === 'EFECTIVO' ? parseFloat(montoRecibido) : undefined,
         vuelto: medioPago === 'EFECTIVO' ? vuelto : undefined,
         clienteId: selectedClienteId,
         fecha: Date.now(),
-      });
+      };
+
+      // Hybrid mode: try immediate sync if online
+      if (navigator.onLine) {
+        try {
+          // Try to sync immediately to server
+          await ventasApi.crear(ventaCreate);
+          // Success: save locally as synced
+          await syncService.saveVentaLocally({ ...localVentaData, synced: true });
+          toast({ title: 'Venta completada', description: 'Sincronizada con el servidor' });
+        } catch (syncError) {
+          // Failed: save locally for later sync
+          const errorMessage = syncError instanceof Error ? syncError.message : 'Error de sincronizacion';
+          await syncService.saveVentaLocally({ ...localVentaData, syncError: errorMessage });
+          toast({ title: 'Venta guardada', description: 'Se sincronizara cuando haya conexion', variant: 'destructive' });
+          console.error('Error syncing venta:', syncError);
+        }
+      } else {
+        // Offline: save locally
+        await syncService.saveVentaLocally(localVentaData);
+        toast({ title: 'Sin conexion', description: 'Venta guardada localmente' });
+      }
 
       // Increment local venta number
       await setNextVentaNumero(numero + 1);

@@ -1,12 +1,12 @@
 'use client';
 
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
-import { Wifi, WifiOff, RefreshCw, CloudOff } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, CloudOff, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export function OfflineIndicator() {
-  const { isOnline, syncStatus, pendingVentas, lastSyncAt, forceSync } = useOnlineStatus();
+  const { isOnline, syncStatus, pendingVentas, errorCount, lastSyncAt, forceSync } = useOnlineStatus();
 
   const formatLastSync = (timestamp: number | null): string => {
     if (!timestamp) return 'Nunca';
@@ -57,6 +57,24 @@ export function OfflineIndicator() {
       >
         <CloudOff className="h-4 w-4" />
         <span>Error - Reintentar</span>
+      </Button>
+    );
+  }
+
+  // Online with sync errors
+  if (errorCount > 0) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleSync}
+        className="flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-950 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900 rounded-lg text-sm h-auto"
+      >
+        <AlertCircle className="h-4 w-4" />
+        <span>Ventas sin sincronizar</span>
+        <span className="px-1.5 py-0.5 bg-red-200 dark:bg-red-900 rounded text-xs font-medium">
+          {errorCount}
+        </span>
       </Button>
     );
   }

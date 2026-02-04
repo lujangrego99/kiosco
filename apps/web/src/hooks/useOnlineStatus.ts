@@ -10,6 +10,7 @@ interface OnlineStatus {
   isOnline: boolean;
   syncStatus: SyncStatus;
   pendingVentas: number;
+  errorCount: number;
   lastSyncAt: number | null;
   forceSync: () => Promise<void>;
 }
@@ -18,6 +19,7 @@ export function useOnlineStatus(): OnlineStatus {
   const [isOnline, setIsOnline] = useState(true);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>('idle');
   const [pendingVentas, setPendingVentas] = useState(0);
+  const [errorCount, setErrorCount] = useState(0);
   const [lastSyncAt, setLastSyncAt] = useState<number | null>(null);
 
   useEffect(() => {
@@ -41,7 +43,12 @@ export function useOnlineStatus(): OnlineStatus {
     const unsubscribe = syncService.onStatusChange((status, pending) => {
       setSyncStatus(status);
       setPendingVentas(pending);
+      // Also update error count when status changes
+      syncService.getErrorCount().then(setErrorCount);
     });
+
+    // Initial error count
+    syncService.getErrorCount().then(setErrorCount);
 
     return unsubscribe;
   }, []);
@@ -68,6 +75,7 @@ export function useOnlineStatus(): OnlineStatus {
     isOnline,
     syncStatus,
     pendingVentas,
+    errorCount,
     lastSyncAt,
     forceSync,
   };

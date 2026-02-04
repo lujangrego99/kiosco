@@ -174,24 +174,67 @@ class SyncService {
     }
   }
 
-  // Save a venta locally (for offline mode)
-  async saveVentaLocally(venta: Omit<OfflineVenta, 'synced'>): Promise<void> {
-    await db.ventas.put({ ...venta, synced: false });
+  // Save a venta locally (for offline mode or after failed sync)
+  async saveVentaLocally(venta: Omit<OfflineVenta, 'synced'> & { synced?: boolean }): Promise<void> {
+    await db.ventas.put({ ...venta, synced: venta.synced ?? false });
     await this.updatePendingCount();
 
-    // Deduct stock locally
-    for (const item of venta.items) {
-      const producto = await db.productos.get(item.productoId);
-      if (producto) {
-        await db.productos.update(item.productoId, {
-          stockActual: Math.max(0, producto.stockActual - item.cantidad),
-        });
+    // Deduct stock locally only if not already synced (avoid double deduction)
+    if (!venta.synced) {
+      for (const item of venta.items) {
+        const producto = await db.productos.get(item.productoId);
+        if (producto) {
+          await db.productos.update(item.productoId, {
+            stockActual: Math.max(0, producto.stockActual - item.cantidad),
+          });
+        }
       }
     }
 
-    // Try to sync immediately if online
-    if (this.isOnline()) {
+    // Try to sync immediately if online and not already synced
+    if (this.isOnline() && !venta.synced) {
       this.syncVentasPendientes().catch(console.error);
+    }
+  }
+
+  // Get count of ventas with sync errors
+  async getErrorCount(): Promise<number> {
+    return await db.ventas.filter(v => v.synced === false && !!v.syncError).count();
+  }
+
+  // Get ventas with sync errors
+  async getVentasConError(): Promise<OfflineVenta[]> {
+    return await db.ventas.filter(v => v.synced === false && !!v.syncError).toArray();
+  }
+
+  // Retry syncing a specific venta
+  async retrySyncVenta(ventaId: string): Promise<boolean> {
+    if (!this.isOnline()) return false;
+
+    const venta = await db.ventas.get(ventaId);
+    if (!venta || venta.synced) return false;
+
+    try {
+      const ventaCreate: VentaCreate = {
+        items: venta.items.map((item) => ({
+          productoId: item.productoId,
+          cantidad: item.cantidad,
+        })),
+        medioPago: venta.medioPago as 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA',
+        descuento: venta.descuento,
+        montoRecibido: venta.montoRecibido,
+        clienteId: venta.clienteId,
+      };
+
+      await ventasApi.crear(ventaCreate);
+      await db.ventas.update(ventaId, { synced: true, syncError: undefined });
+      await this.updatePendingCount();
+      return true;
+    } catch (error) {
+      await db.ventas.update(ventaId, {
+        syncError: error instanceof Error ? error.message : 'Error de sincronizacion',
+      });
+      return false;
     }
   }
 }
