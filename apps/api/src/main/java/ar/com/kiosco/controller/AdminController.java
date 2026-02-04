@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -26,6 +27,7 @@ public class AdminController {
     private final SuscripcionService suscripcionService;
     private final FeatureFlagService featureFlagService;
     private final TenantMigrationService tenantMigrationService;
+    private final BackupService backupService;
 
     /**
      * Check if current user has superadmin access.
@@ -257,5 +259,94 @@ public class AdminController {
     public ResponseEntity<MigrationReportDTO.TenantMigrationResult> migrateTenant(@PathVariable String schema) {
         requireSuperadmin();
         return ResponseEntity.ok(tenantMigrationService.migrateTenant(schema));
+    }
+
+    // ========== Backups ==========
+
+    /**
+     * Run backup of all tenant schemas immediately.
+     */
+    @PostMapping("/backups/run")
+    public ResponseEntity<BackupReportDTO> runBackup() {
+        requireSuperadmin();
+        return ResponseEntity.ok(backupService.backupAllTenants());
+    }
+
+    /**
+     * Backup a specific tenant schema.
+     */
+    @PostMapping("/backups/tenant/{schema}")
+    public ResponseEntity<BackupResultDTO> backupTenant(@PathVariable String schema) {
+        requireSuperadmin();
+        return ResponseEntity.ok(backupService.backupTenant(schema));
+    }
+
+    /**
+     * List all existing backups.
+     */
+    @GetMapping("/backups")
+    public ResponseEntity<List<BackupInfoDTO>> listBackups() {
+        requireSuperadmin();
+        return ResponseEntity.ok(backupService.listBackups());
+    }
+
+    /**
+     * List backups for a specific tenant.
+     */
+    @GetMapping("/backups/tenant/{schema}")
+    public ResponseEntity<List<BackupInfoDTO>> listTenantBackups(@PathVariable String schema) {
+        requireSuperadmin();
+        return ResponseEntity.ok(backupService.listBackupsForSchema(schema));
+    }
+
+    /**
+     * Get backup statistics.
+     */
+    @GetMapping("/backups/stats")
+    public ResponseEntity<Map<String, Object>> getBackupStats() {
+        requireSuperadmin();
+        return ResponseEntity.ok(backupService.getBackupStats());
+    }
+
+    /**
+     * Restore a backup to a schema.
+     * WARNING: This will delete existing data in the schema!
+     */
+    @PostMapping("/backups/restore")
+    public ResponseEntity<Void> restoreBackup(@Valid @RequestBody RestoreRequestDTO request) {
+        requireSuperadmin();
+        try {
+            backupService.restoreBackup(request.getSchema(), request.getFilename());
+            return ResponseEntity.ok().build();
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Restore failed: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Delete a specific backup file.
+     */
+    @DeleteMapping("/backups/{filename}")
+    public ResponseEntity<Void> deleteBackup(@PathVariable String filename) {
+        requireSuperadmin();
+        try {
+            backupService.deleteBackup(filename);
+            return ResponseEntity.noContent().build();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete backup: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Run backup cleanup to delete old backups.
+     */
+    @PostMapping("/backups/cleanup")
+    public ResponseEntity<Map<String, Object>> runCleanup() {
+        requireSuperadmin();
+        int deleted = backupService.cleanupOldBackups();
+        return ResponseEntity.ok(Map.of(
+                "deletedCount", deleted,
+                "message", deleted > 0 ? "Deleted " + deleted + " old backups" : "No old backups to delete"
+        ));
     }
 }

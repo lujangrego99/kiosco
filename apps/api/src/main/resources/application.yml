@@ -43,6 +43,14 @@ jwt:
   secret: ${JWT_SECRET:kiosco-development-secret-key-change-in-production}
   expiration: ${JWT_EXPIRATION:86400000}
 
+# Backup Configuration
+backup:
+  enabled: ${BACKUP_ENABLED:true}
+  path: ${BACKUP_PATH:/var/backups/kiosco}
+  retention-days: ${BACKUP_RETENTION_DAYS:30}
+  cron: ${BACKUP_CRON:0 0 3 * * *}           # 3 AM daily
+  cleanup-cron: ${BACKUP_CLEANUP_CRON:0 0 4 * * *}  # 4 AM daily
+
 logging:
   level:
     ar.com.kiosco: DEBUG

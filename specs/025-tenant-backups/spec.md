@@ -4,7 +4,7 @@
 
 ## Priority: 6
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -138,14 +138,14 @@ backup:
 
 ## Acceptance Criteria
 
-- [ ] `BackupService.backupTenant()` genera dump comprimido del schema
-- [ ] `backupAllTenants()` procesa todos los tenants
-- [ ] Scheduled job corre backup diario a las 3 AM
-- [ ] Cleanup elimina backups mas viejos que retencion
-- [ ] `POST /api/admin/backups/run` ejecuta backup manual
-- [ ] `GET /api/admin/backups` lista backups con metadata
-- [ ] Restore funciona correctamente
-- [ ] Test: backup, modificar datos, restore, verificar datos anteriores
+- [x] `BackupService.backupTenant()` genera dump comprimido del schema
+- [x] `backupAllTenants()` procesa todos los tenants
+- [x] Scheduled job corre backup diario a las 3 AM
+- [x] Cleanup elimina backups mas viejos que retencion
+- [x] `POST /api/admin/backups/run` ejecuta backup manual
+- [x] `GET /api/admin/backups` lista backups con metadata
+- [x] Restore funciona correctamente
+- [x] Test: backup, modificar datos, restore, verificar datos anteriores
 
 ---
 
