@@ -35,7 +35,7 @@ class SyncService {
   }
 
   async updatePendingCount(): Promise<void> {
-    this.pendingCount = await db.ventas.where('synced').equals(0).count();
+    this.pendingCount = await db.ventas.filter(v => v.synced === false).count();
     this.notifyListeners();
   }
 
@@ -104,7 +104,7 @@ class SyncService {
   async syncVentasPendientes(): Promise<void> {
     if (!this.isOnline()) return;
 
-    const pendingVentas = await db.ventas.where('synced').equals(0).toArray();
+    const pendingVentas = await db.ventas.filter(v => v.synced === false).toArray();
 
     for (const venta of pendingVentas) {
       try {
@@ -116,6 +116,7 @@ class SyncService {
           medioPago: venta.medioPago as 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA',
           descuento: venta.descuento,
           montoRecibido: venta.montoRecibido,
+          clienteId: venta.clienteId,
         };
 
         await ventasApi.crear(ventaCreate);

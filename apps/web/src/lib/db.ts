@@ -66,7 +66,7 @@ class KioscoDB extends Dexie {
 
   constructor() {
     super('kiosco');
-    this.version(1).stores({
+    this.version(111).stores({
       productos: 'id, codigo, codigoBarras, nombre, categoriaId, esFavorito, activo',
       categorias: 'id, nombre, activo',
       ventas: 'id, fecha, synced',
@@ -106,5 +106,5 @@ export async function setNextVentaNumero(numero: number): Promise<void> {
 }
 
 export async function getPendingVentasCount(): Promise<number> {
-  return await db.ventas.where('synced').equals(0).count();
+  return await db.ventas.filter(v => v.synced === false).count();
 }

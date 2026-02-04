@@ -26,14 +26,14 @@ export function useOfflineProducts(options: UseOfflineProductsOptions = {}): Use
 
   // Live query for categorias
   const categorias = useLiveQuery(
-    () => db.categorias.where('activo').equals(1).sortBy('orden'),
+    () => db.categorias.filter(c => c.activo === true).sortBy('orden'),
     [],
     []
   );
 
   // Live query for productos with filters
   const allProductos = useLiveQuery(
-    () => db.productos.where('activo').equals(1).toArray(),
+    () => db.productos.filter(p => p.activo === true).toArray(),
     [],
     []
   );
@@ -135,8 +135,7 @@ export function useOfflineProductSearch(query: string): OfflineProducto[] {
       if (!query) return [];
       const q = query.toLowerCase();
       return db.productos
-        .where('activo')
-        .equals(1)
+        .filter(p => p.activo === true)
         .filter(
           (p) =>
             p.nombre.toLowerCase().includes(q) ||
