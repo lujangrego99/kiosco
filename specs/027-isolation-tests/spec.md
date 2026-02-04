@@ -4,7 +4,7 @@
 
 ## Priority: 8
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -151,13 +151,13 @@ jobs:
 
 ## Acceptance Criteria
 
-- [ ] Test verifica que tenant A no ve productos de tenant B
-- [ ] Test para cada entidad principal (categoria, cliente, venta, etc)
-- [ ] Test verifica que sin context no se accede a datos
-- [ ] Test de sanitizacion de schema name
-- [ ] Test E2E via API con dos usuarios diferentes
-- [ ] Tests integrados en CI/CD
-- [ ] Todos los tests pasan consistentemente
+- [x] Test verifica que tenant A no ve productos de tenant B
+- [x] Test para cada entidad principal (categoria, cliente, venta, etc)
+- [x] Test verifica que sin context no se accede a datos
+- [x] Test de sanitizacion de schema name
+- [x] Test E2E via API con dos usuarios diferentes
+- [x] Tests integrados en CI/CD (run with: ./gradlew test --tests "*IsolationTest*")
+- [x] Todos los tests pasan consistentemente
 
 ---
 
