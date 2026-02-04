@@ -1,6 +1,6 @@
 import { db, setLastSyncTime, setNextVentaNumero, type OfflineProducto, type OfflineCategoria, type OfflineVenta } from './db';
 import { productosApi, categoriasApi, ventasApi } from './api';
-import type { Producto, Categoria, VentaCreate } from '@/types';
+import type { Producto, Categoria, VentaCreate, MedioPago } from '@/types';
 
 type SyncStatus = 'idle' | 'syncing' | 'error';
 type SyncCallback = (status: SyncStatus, pendingCount: number) => void;
@@ -113,7 +113,7 @@ class SyncService {
             productoId: item.productoId,
             cantidad: item.cantidad,
           })),
-          medioPago: venta.medioPago as 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA',
+          medioPago: venta.medioPago as MedioPago,
           descuento: venta.descuento,
           montoRecibido: venta.montoRecibido,
           clienteId: venta.clienteId,
@@ -220,7 +220,7 @@ class SyncService {
           productoId: item.productoId,
           cantidad: item.cantidad,
         })),
-        medioPago: venta.medioPago as 'EFECTIVO' | 'MERCADOPAGO' | 'TRANSFERENCIA',
+        medioPago: venta.medioPago as MedioPago,
         descuento: venta.descuento,
         montoRecibido: venta.montoRecibido,
         clienteId: venta.clienteId,

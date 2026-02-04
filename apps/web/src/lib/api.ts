@@ -267,7 +267,9 @@ export const cuentaCorrienteApi = {
 
   verificarPuedeFiar: async (clienteId: string, monto: number): Promise<{ puede: boolean; saldoActual: number; limiteCredito: number; disponible: number }> => {
     const response = await authFetch(`${API_BASE}/clientes/${clienteId}/puede-fiar?monto=${monto}`);
-    return handleResponse<{ puede: boolean; saldoActual: number; limiteCredito: number; disponible: number }>(response);
+    const data = await handleResponse<{ puedeTomarFiado: boolean; saldoActual: number; limiteCredito: number; disponible: number }>(response);
+    // Map backend field name to frontend expected name
+    return { puede: data.puedeTomarFiado, saldoActual: data.saldoActual, limiteCredito: data.limiteCredito, disponible: data.disponible };
   },
 };
 
