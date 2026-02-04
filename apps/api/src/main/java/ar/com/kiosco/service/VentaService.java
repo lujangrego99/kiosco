@@ -10,6 +10,7 @@ import ar.com.kiosco.dto.VentaItemCreateDTO;
 import ar.com.kiosco.repository.ClienteRepository;
 import ar.com.kiosco.repository.ProductoRepository;
 import ar.com.kiosco.repository.VentaRepository;
+import ar.com.kiosco.security.KioscoContext;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -33,6 +34,7 @@ public class VentaService {
     private final ClienteRepository clienteRepository;
     private final CuentaCorrienteService cuentaCorrienteService;
     private final LoteService loteService;
+    private final PlanLimitService planLimitService;
 
     @Transactional(readOnly = true)
     public VentaDTO obtenerPorId(UUID id) {
@@ -60,6 +62,9 @@ public class VentaService {
     @Transactional
     @CacheEvict(cacheNames = "productos", allEntries = true)
     public VentaDTO crear(VentaCreateDTO dto) {
+        // Validate plan limit before creating sale
+        planLimitService.validateCanCreateVenta(KioscoContext.getCurrentKioscoId());
+
         // Validate medio de pago
         Venta.MedioPago medioPago;
         try {

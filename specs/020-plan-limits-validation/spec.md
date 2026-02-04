@@ -4,7 +4,7 @@
 
 ## Priority: 1
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -120,13 +120,13 @@ Response:
 
 ## Acceptance Criteria
 
-- [ ] `PlanLimitService` implementado con los 3 metodos de validacion
-- [ ] `PlanLimitExceededException` retorna HTTP 402 con detalle del limite
-- [ ] `ProductoService.crear()` valida limite antes de crear
-- [ ] `VentaService.crear()` valida limite antes de crear
-- [ ] Agregar miembro a kiosco valida limite de usuarios
-- [ ] `GET /api/plan/usage` retorna uso actual vs limites
-- [ ] Tests unitarios para cada validacion
+- [x] `PlanLimitService` implementado con los 3 metodos de validacion
+- [x] `PlanLimitExceededException` retorna HTTP 402 con detalle del limite
+- [x] `ProductoService.crear()` valida limite antes de crear
+- [x] `VentaService.crear()` valida limite antes de crear
+- [x] Agregar miembro a kiosco valida limite de usuarios
+- [x] `GET /api/plan/usage` retorna uso actual vs limites
+- [x] Tests unitarios para cada validacion
 - [ ] Test E2E: crear productos hasta exceder limite, verificar 402
 
 ---

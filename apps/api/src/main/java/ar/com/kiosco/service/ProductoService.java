@@ -27,6 +27,7 @@ public class ProductoService {
 
     private final ProductoRepository productoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final PlanLimitService planLimitService;
 
     /**
      * Get current kiosco ID for cache key prefix.
@@ -105,6 +106,9 @@ public class ProductoService {
     @Transactional
     @CacheEvict(allEntries = true)
     public ProductoDTO crear(ProductoCreateDTO dto) {
+        // Validate plan limit before creating product
+        planLimitService.validateCanCreateProducto(KioscoContext.getCurrentKioscoId());
+
         Categoria categoria = null;
         if (dto.getCategoriaId() != null) {
             categoria = categoriaRepository.findById(dto.getCategoriaId())

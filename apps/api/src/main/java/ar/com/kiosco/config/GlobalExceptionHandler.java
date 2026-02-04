@@ -1,5 +1,6 @@
 package ar.com.kiosco.config;
 
+import ar.com.kiosco.exception.PlanLimitExceededException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,25 @@ import java.util.Map;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(PlanLimitExceededException.class)
+    public ResponseEntity<Map<String, Object>> handlePlanLimitExceeded(PlanLimitExceededException ex) {
+        log.warn("Plan limit exceeded: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now().toString());
+        response.put("status", 402);
+        response.put("error", "Plan Limit Exceeded");
+        response.put("message", ex.getMessage());
+        response.put("code", "PLAN_LIMIT_EXCEEDED");
+        response.put("limitType", ex.getLimitType().name());
+        response.put("current", ex.getCurrent());
+        response.put("limit", ex.getLimit());
+        response.put("plan", ex.getPlanName());
+        response.put("upgradeUrl", "/configuracion/plan");
+
+        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(response);
+    }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex) {
