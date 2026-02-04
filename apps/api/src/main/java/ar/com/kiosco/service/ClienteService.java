@@ -20,6 +20,7 @@ public class ClienteService {
 
     private final ClienteRepository clienteRepository;
     private final AuditService auditService;
+    private final EncryptionService encryptionService;
 
     @Transactional(readOnly = true)
     public List<ClienteDTO> listarActivos() {
@@ -60,6 +61,7 @@ public class ClienteService {
                 .tipoDocumento(dto.getTipoDocumento())
                 .telefono(dto.getTelefono())
                 .email(dto.getEmail())
+                .emailHash(dto.getEmail() != null ? encryptionService.hash(dto.getEmail()) : null)
                 .direccion(dto.getDireccion())
                 .notas(dto.getNotas())
                 .activo(true)
@@ -86,6 +88,7 @@ public class ClienteService {
         cliente.setTipoDocumento(dto.getTipoDocumento());
         cliente.setTelefono(dto.getTelefono());
         cliente.setEmail(dto.getEmail());
+        cliente.setEmailHash(dto.getEmail() != null ? encryptionService.hash(dto.getEmail()) : null);
         cliente.setDireccion(dto.getDireccion());
         cliente.setNotas(dto.getNotas());
 

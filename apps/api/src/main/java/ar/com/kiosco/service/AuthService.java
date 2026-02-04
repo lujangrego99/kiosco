@@ -43,6 +43,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final EncryptionService encryptionService;
 
     private static final Pattern NON_LATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
@@ -52,8 +53,9 @@ public class AuthService {
      */
     @Transactional
     public AuthDTO.AuthResponse register(AuthDTO.RegisterRequest request) {
-        // Check if email already exists
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
+        // Check if email already exists (using hash for encrypted lookup)
+        String emailHash = encryptionService.hash(request.getEmail());
+        if (usuarioRepository.existsByEmailHash(emailHash)) {
             throw new IllegalArgumentException("El email ya esta registrado");
         }
 
@@ -68,20 +70,22 @@ public class AuthService {
             throw new IllegalArgumentException("El slug del kiosco ya existe");
         }
 
-        // Create user
+        // Create user with email hash for lookups
         Usuario usuario = Usuario.builder()
                 .email(request.getEmail())
+                .emailHash(emailHash)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .nombre(request.getNombre())
                 .activo(true)
                 .build();
         usuario = usuarioRepository.save(usuario);
 
-        // Create kiosco
+        // Create kiosco with email hash for lookups
         Kiosco kiosco = Kiosco.builder()
                 .nombre(request.getNombreKiosco())
                 .slug(slug)
                 .email(request.getEmail())
+                .emailHash(emailHash)
                 .plan("free")
                 .activo(true)
                 .build();
@@ -123,7 +127,9 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
+        // Use hash-based lookup for encrypted email
+        String emailHash = encryptionService.hash(request.getEmail());
+        Usuario usuario = usuarioRepository.findByEmailHash(emailHash)
                 .orElseThrow(() -> new IllegalArgumentException("Credenciales invalidas"));
 
         List<KioscoMember> memberships = kioscoMemberRepository.findByUsuarioIdWithKiosco(usuario.getId());

@@ -1,5 +1,6 @@
 package ar.com.kiosco.domain;
 
+import ar.com.kiosco.config.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,8 @@ import java.util.UUID;
 /**
  * Global entity representing a system user.
  * Users can belong to one or more kioscos via KioscoMember.
+ *
+ * Note: email field is encrypted at rest. Use emailHash for lookups.
  */
 @Entity
 @Table(name = "usuarios")
@@ -33,8 +36,12 @@ public class Usuario implements UserDetails {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, unique = true, length = 200)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(nullable = false, length = 500)
     private String email;
+
+    @Column(name = "email_hash", length = 64)
+    private String emailHash;
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;

@@ -43,6 +43,10 @@ jwt:
   secret: ${JWT_SECRET:kiosco-development-secret-key-change-in-production}
   expiration: ${JWT_EXPIRATION:86400000}
 
+# Encryption Configuration
+encryption:
+  key: ${ENCRYPTION_KEY:}
+
 # Backup Configuration
 backup:
   enabled: ${BACKUP_ENABLED:true}

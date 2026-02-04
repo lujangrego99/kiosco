@@ -12,10 +12,13 @@ import org.springframework.stereotype.Service;
 public class UsuarioDetailsService implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
+    private final EncryptionService encryptionService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return usuarioRepository.findByEmail(email)
+        // Use hash-based lookup for encrypted email
+        String emailHash = encryptionService.hash(email);
+        return usuarioRepository.findByEmailHash(emailHash)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
     }
 }

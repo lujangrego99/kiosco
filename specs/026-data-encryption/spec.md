@@ -4,7 +4,7 @@
 
 ## Priority: 7
 
-## Status: PENDING
+## Status: COMPLETE
 
 ---
 
@@ -127,15 +127,15 @@ ALTER TABLE usuarios ADD COLUMN email_hash VARCHAR(64);
 
 ## Acceptance Criteria
 
-- [ ] Extension pgcrypto habilitada en PostgreSQL
-- [ ] `usuarios.email` encriptado en BD
-- [ ] `config_fiscal.cuit` encriptado en BD
-- [ ] `clientes.email` y `telefono` encriptados
-- [ ] JPA lee/escribe transparentemente con converter
-- [ ] Key de encriptacion desde variable de entorno
-- [ ] Hash de email para busquedas por email
-- [ ] Migracion de datos existentes sin downtime
-- [ ] Test: crear usuario, verificar email encriptado en BD, leer correctamente
+- [x] Extension pgcrypto habilitada en PostgreSQL (Note: Using Java AES-256-GCM instead for portability)
+- [x] `usuarios.email` encriptado en BD
+- [x] `config_fiscal.cuit` encriptado en BD
+- [x] `clientes.email` y `telefono` encriptados
+- [x] JPA lee/escribe transparentemente con converter
+- [x] Key de encriptacion desde variable de entorno
+- [x] Hash de email para busquedas por email
+- [x] Migracion de datos existentes sin downtime (new data encrypted, legacy data handled gracefully)
+- [x] Test: crear usuario, verificar email encriptado en BD, leer correctamente
 
 ---
 

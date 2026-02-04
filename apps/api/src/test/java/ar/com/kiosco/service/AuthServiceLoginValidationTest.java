@@ -30,6 +30,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,12 +60,16 @@ class AuthServiceLoginValidationTest {
     @Mock
     private AuthenticationManager authenticationManager;
 
+    @Mock
+    private EncryptionService encryptionService;
+
     @InjectMocks
     private AuthService authService;
 
     private UUID usuarioId;
     private Usuario usuario;
     private String testEmail = "test@example.com";
+    private String testEmailHash = "hashed_test_email";
     private String testPassword = "password123";
 
     @BeforeEach
@@ -73,10 +78,14 @@ class AuthServiceLoginValidationTest {
         usuario = Usuario.builder()
                 .id(usuarioId)
                 .email(testEmail)
+                .emailHash(testEmailHash)
                 .passwordHash("hashedpassword")
                 .nombre("Test User")
                 .activo(true)
                 .build();
+
+        // Default encryption service behavior
+        when(encryptionService.hash(testEmail)).thenReturn(testEmailHash);
     }
 
     private Kiosco createKiosco(String nombre, String plan, boolean activo) {
@@ -115,7 +124,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
             when(jwtService.generateToken(any(), any(), any())).thenReturn("test-token");
 
@@ -144,7 +153,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
 
             AuthDTO.LoginRequest request = new AuthDTO.LoginRequest();
@@ -174,7 +183,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
             when(jwtService.generateToken(any(), any(), any())).thenReturn("test-token");
 
@@ -202,7 +211,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
             when(suscripcionRepository.findActivaByKioscoId(proKiosco.getId())).thenReturn(Optional.empty());
             when(suscripcionRepository.findByKioscoIdAndEstado(proKiosco.getId(), Suscripcion.Estado.CANCELADA))
@@ -235,7 +244,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
             when(suscripcionRepository.findActivaByKioscoId(proKiosco.getId())).thenReturn(Optional.of(activeSub));
             when(jwtService.generateToken(any(), any(), any())).thenReturn("test-token");
@@ -265,7 +274,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
             when(suscripcionRepository.findActivaByKioscoId(proKiosco.getId())).thenReturn(Optional.empty());
             when(suscripcionRepository.findByKioscoIdAndEstado(proKiosco.getId(), Suscripcion.Estado.CANCELADA))
@@ -305,7 +314,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
             when(jwtService.generateAccountToken(any())).thenReturn("account-token");
 
@@ -336,7 +345,7 @@ class AuthServiceLoginValidationTest {
 
             when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                     .thenReturn(null);
-            when(usuarioRepository.findByEmail(testEmail)).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmailHash(testEmailHash)).thenReturn(Optional.of(usuario));
             when(kioscoMemberRepository.findByUsuarioIdWithKiosco(usuarioId)).thenReturn(memberships);
 
             AuthDTO.LoginRequest request = new AuthDTO.LoginRequest();

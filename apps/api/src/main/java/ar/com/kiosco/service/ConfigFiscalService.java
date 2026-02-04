@@ -24,6 +24,7 @@ public class ConfigFiscalService {
 
     private final ConfigFiscalRepository configFiscalRepository;
     private final CertificadoService certificadoService;
+    private final EncryptionService encryptionService;
 
     /**
      * Obtiene la configuración fiscal actual del kiosco.
@@ -60,7 +61,9 @@ public class ConfigFiscalService {
                 .orElse(new ConfigFiscal());
 
         // Actualizar campos
-        config.setCuit(CuitValidator.formatear(dto.getCuitNormalizado()));
+        String cuit = CuitValidator.formatear(dto.getCuitNormalizado());
+        config.setCuit(cuit);
+        config.setCuitHash(encryptionService.hash(cuit));
         config.setRazonSocial(dto.getRazonSocial());
         config.setCondicionIva(dto.getCondicionIva());
         config.setDomicilioFiscal(dto.getDomicilioFiscal());

@@ -1,5 +1,6 @@
 package ar.com.kiosco.domain;
 
+import ar.com.kiosco.config.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -10,6 +11,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Tenant entity representing fiscal configuration.
+ *
+ * Note: cuit and razonSocial fields are encrypted at rest.
+ * Use cuitHash for CUIT lookups.
+ */
 @Entity
 @Table(name = "config_fiscal")
 @EntityListeners(AuditingEntityListener.class)
@@ -23,10 +30,15 @@ public class ConfigFiscal {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 13)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(nullable = false, length = 500)
     private String cuit;
 
-    @Column(name = "razon_social", nullable = false, length = 200)
+    @Column(name = "cuit_hash", length = 64)
+    private String cuitHash;
+
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(name = "razon_social", nullable = false, length = 500)
     private String razonSocial;
 
     @Enumerated(EnumType.STRING)

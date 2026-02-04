@@ -1,5 +1,6 @@
 package ar.com.kiosco.domain;
 
+import ar.com.kiosco.config.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -9,6 +10,12 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Tenant entity representing a client/customer.
+ *
+ * Note: email and telefono fields are encrypted at rest.
+ * Use emailHash for email lookups.
+ */
 @Entity
 @Table(name = "clientes")
 @EntityListeners(AuditingEntityListener.class)
@@ -31,11 +38,16 @@ public class Cliente {
     @Column(name = "tipo_documento", length = 10)
     private String tipoDocumento;
 
-    @Column(length = 50)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 500)
     private String telefono;
 
-    @Column(length = 200)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 500)
     private String email;
+
+    @Column(name = "email_hash", length = 64)
+    private String emailHash;
 
     private String direccion;
 

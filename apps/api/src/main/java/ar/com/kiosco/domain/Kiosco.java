@@ -1,5 +1,6 @@
 package ar.com.kiosco.domain;
 
+import ar.com.kiosco.config.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +16,8 @@ import java.util.UUID;
 /**
  * Global entity representing a kiosco (tenant).
  * Each kiosco has its own schema: kiosco_{uuid8}
+ *
+ * Note: email field is encrypted at rest. Use emailHash for lookups.
  */
 @Entity
 @Table(name = "kioscos")
@@ -35,8 +38,12 @@ public class Kiosco {
     @Column(nullable = false, unique = true, length = 50)
     private String slug;
 
-    @Column(length = 200)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 500)
     private String email;
+
+    @Column(name = "email_hash", length = 64)
+    private String emailHash;
 
     @Column(length = 50)
     private String telefono;
